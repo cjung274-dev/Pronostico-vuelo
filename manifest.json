@@ -1,0 +1,18 @@
+{
+  "name": "Condición de Vuelo RPA",
+  "short_name": "Vuelo RPA",
+  "description": "Evaluación de condiciones meteorológicas y geomagnéticas para vuelo de dron",
+  "start_url": "./pronostico_vuelo.html",
+  "display": "standalone",
+  "background_color": "#0A0E13",
+  "theme_color": "#0A0E13",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0E13">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vuelo RPA">
+<title>APTO/VUELO — Condiciones para RPAS</title>
+<style>
+  :root{
+    --bg:#0A0E13;
+    --panel:#121820;
+    --panel2:#161D26;
+    --line:#22303C;
+    --amber:#FFB020;
+    --amber-dim:#8A6112;
+    --safe:#39D98A;
+    --warn:#FFB020;
+    --danger:#FF5252;
+    --text:#E7EDF3;
+    --muted:#7C8B99;
+    --mono: ui-monospace, "SF Mono", "Roboto Mono", "Courier New", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{padding:14px 14px 40px;max-width:480px;margin:0 auto;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 16px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .mark{width:30px;height:30px;border:2px solid var(--amber);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;transform:rotate(-6deg);}
+  .brand h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700;color:var(--text);}
+  .brand .sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;}
+  .clock{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;}
+
+  .status{
+    border-radius:10px;padding:18px 16px;margin-bottom:14px;position:relative;overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .status.safe{background:linear-gradient(135deg,#0E2A1F,#0B1B15);border-color:#1E5C3E;}
+  .status.warn{background:linear-gradient(135deg,#2A2110,#1B160B);border-color:#5C4A1E;}
+  .status.danger{background:linear-gradient(135deg,#2A1212,#1B0B0B);border-color:#5C1E1E;}
+  .status .label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  .status .headline{font-size:26px;font-weight:800;margin:4px 0 6px;letter-spacing:-.01em;}
+  .status.safe .headline{color:var(--safe);}
+  .status.warn .headline{color:var(--warn);}
+  .status.danger .headline{color:var(--danger);}
+  .status .reason{font-size:12.5px;color:var(--muted);line-height:1.5;font-family:var(--mono);}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-height:76px;}
+  .card .k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--mono);margin-bottom:6px;}
+  .card .v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);}
+  .card .v .unit{font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
+  .card .sub{font-size:10.5px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+  .card.flag-warn{border-color:var(--amber-dim);}
+  .card.flag-warn .v{color:var(--amber);}
+  .card.flag-danger{border-color:#5C1E1E;}
+  .card.flag-danger .v{color:var(--danger);}
+  .card.wide{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;}
+
+  .compass{width:52px;height:52px;position:relative;flex-shrink:0;}
+  .compass svg{width:100%;height:100%;}
+
+  .section-title{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:20px 2px 8px;}
+
+  .loading{text-align:center;padding:60px 10px;color:var(--muted);font-family:var(--mono);font-size:12px;}
+  .loading .spin{width:22px;height:22px;border:2px solid var(--line);border-top-color:var(--amber);border-radius:50%;margin:0 auto 14px;animation:sp 0.8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  .foot{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;line-height:1.6;}
+  .foot a{color:var(--amber);text-decoration:none;}
+
+  .err{background:#2A1212;border:1px solid #5C1E1E;color:#FFB3B3;padding:12px;border-radius:8px;font-size:12px;font-family:var(--mono);line-height:1.5;}
+
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 12px;border-radius:6px;cursor:pointer;letter-spacing:.05em;}
+  .btn:active{background:var(--amber-dim);}
+  .toggle{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:14px;}
+  .toggle button{flex:1;background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.08em;padding:8px 0;border-radius:6px;text-transform:uppercase;}
+  .toggle button.active{background:var(--amber-dim);color:var(--amber);font-weight:700;}
+
+  .vnoc{background:#1A1204;border:1px solid var(--amber-dim);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">RPA</div>
+    <div>
+      <h1>Condición de Vuelo</h1>
+      <div class="sub" id="locLabel">localizando…</div>
+    </div>
+  </div>
+  <div class="clock" id="clockLabel">—</div>
+</div>
+
+<div class="toggle">
+  <button id="btnDay" class="active" onclick="setMode(false)">☀ Diurno</button>
+  <button id="btnNight" onclick="setMode(true)">☾ Nocturno</button>
+</div>
+
+<div id="app">
+  <div class="loading">
+    <div class="spin"></div>
+    Obteniendo datos meteorológicos…
+  </div>
+</div>
+
+<div class="foot">
+  Datos: Open-Meteo · Kp: GFZ Potsdam (resp. NOAA SWPC)<br>
+  Umbrales: Procedimiento DGR-TRANSELEC · DAN 151 (DGAC Chile) · límites DJI M30/M4T<br>
+  No reemplaza el juicio operacional del piloto ni normativa vigente.
+</div>
+
+<script>
+const RENGO_FALLBACK = { lat: -34.4083, lon: -70.8642, name: "Rengo, O'Higgins (aprox.)" };
+let isNight = false;
+let lastWeather = null, lastKp = null;
+
+function setMode(night){
+  isNight = night;
+  document.getElementById('btnDay').classList.toggle('active', !night);
+  document.getElementById('btnNight').classList.toggle('active', night);
+  if(lastWeather) render(lastWeather, lastKp);
+}
+
+function toKmh(ms){ return ms; } // open-meteo already returns km/h with windspeed_unit=kmh
+
+function dewPoint(tempC, rh){
+  const a=17.625, b=243.04;
+  const gamma = Math.log(rh/100) + (a*tempC)/(b+tempC);
+  return (b*gamma)/(a-gamma);
+}
+
+function dirToCompass(deg){
+  const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+  return dirs[Math.round(deg/22.5)%16];
+}
+
+function fmtTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+}
+
+function updateClock(){
+  document.getElementById('clockLabel').textContent =
+    new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+async function fetchNOAAKp(){
+  const r = await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+  if(!r.ok) throw new Error('NOAA HTTP '+r.status);
+  const j = await r.json();
+  for(let i=j.length-1; i>0; i--){
+    const val = parseFloat(j[i][1]);
+    if(!isNaN(val)) return {value:val, source:'NOAA SWPC'};
+  }
+  throw new Error('NOAA sin valor válido');
+}
+
+async function fetchGFZKp(){
+  const now = new Date();
+  const start = new Date(now.getTime() - 24*3600*1000);
+  const iso = d => d.toISOString().slice(0,19);
+  const url = `https://kp.gfz.de/app/json/?start=${iso(start)}&end=${iso(now)}&index=Kp&status=def`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('GFZ HTTP '+r.status);
+  const j = await r.json();
+  const vals = j.Kp || j.kp || j.index || (Array.isArray(j) ? j.map(row=>row[1]) : null);
+  if(Array.isArray(vals) && vals.length){
+    for(let i=vals.length-1; i>=0; i--){
+      const v = parseFloat(vals[i]);
+      if(!isNaN(v)) return {value:v, source:'GFZ Potsdam'};
+    }
+  }
+  throw new Error('GFZ sin valor válido');
+}
+
+async function fetchKp(){
+  // se intentan ambas fuentes EN PARALELO; se usa la primera que responda con éxito
+  const results = await Promise.allSettled([fetchNOAAKp(), fetchGFZKp()]);
+  results.forEach((r,i)=>{
+    if(r.status==='rejected') console.warn(['NOAA','GFZ'][i]+' falló:', r.reason.message);
+  });
+  const ok = results.find(r=>r.status==='fulfilled');
+  if(ok) return ok.value;
+  return {value:null, source:null};
+}
+
+async function fetchWeather(lat, lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,wind_direction_10m`
+    + `&daily=sunrise,sunset&timezone=auto&wind_speed_unit=kmh&forecast_days=1`;
+  const r = await fetch(url);
+  return r.json();
+}
+
+function nearestHourIndex(times){
+  const now = Date.now();
+  let bestI=0, bestDiff=Infinity;
+  times.forEach((t,i)=>{
+    const diff = Math.abs(new Date(t).getTime()-now);
+    if(diff<bestDiff){bestDiff=diff;bestI=i;}
+  });
+  return bestI;
+}
+
+function compassSVG(deg){
+  return `<svg viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#22303C" stroke-width="2"/>
+    <text x="50" y="14" fill="#7C8B99" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">N</text>
+    <line x1="50" y1="50" x2="50" y2="14" stroke="#FFB020" stroke-width="3" stroke-linecap="round"
+      transform="rotate(${deg} 50 50)"/>
+    <circle cx="50" cy="50" r="3" fill="#FFB020"/>
+  </svg>`;
+}
+
+function render(data, kp){
+  lastWeather = data; lastKp = kp;
+  const kpVal = kp ? kp.value : null;
+  const kpSrc = kp ? kp.source : null;
+
+  const hIdx = nearestHourIndex(data.hourly.time);
+  const h = data.hourly;
+
+  const temp = h.temperature_2m[hIdx];
+  const rh = h.relative_humidity_2m[hIdx];
+  const dew = dewPoint(temp, rh);
+  const spread = temp - dew;
+  const wind = h.wind_speed_10m[hIdx];
+  const gust = h.wind_gusts_10m[hIdx];
+  const windDir = h.wind_direction_10m[hIdx];
+  const precip = h.precipitation_probability ? h.precipitation_probability[hIdx] : 0;
+  const cloud = h.cloud_cover[hIdx];
+  const vis = h.visibility ? (h.visibility[hIdx]/1000).toFixed(1) : '—';
+
+  // --- umbrales: procedimiento DGR (viento 40km/h), DAN 151 (nocturno=VNOC+luces),
+  //     límites de fábrica DJI M30/M30T (15 m/s=54km/h vuelo, 12m/s=43km/h despegue/aterrizaje) ---
+  let issues = [];
+  let level = 'safe'; // safe | warn | danger
+
+  // de noche exigimos más margen: visibilidad y niebla son más críticas sin luz natural
+  const windDangerG = isNight ? 35 : 40, windDangerS = isNight ? 30 : 35;
+  const windWarnG = isNight ? 24 : 28, windWarnS = isNight ? 18 : 22;
+  const visDanger = isNight ? 4 : 3, visWarn = isNight ? 8 : 6;
+  const dewDanger = isNight ? 2.0 : 1.5, dewWarn = isNight ? 3.5 : 2.5;
+
+  if(gust >= windDangerG || wind >= windDangerS){ issues.push(`Viento/ráfaga ≥ límite de procedimiento (${windDangerG} km/h)`); level='danger'; }
+  else if(gust >= windWarnG || wind >= windWarnS){ issues.push('Viento elevado — vigilar ráfagas'); if(level!=='danger') level='warn'; }
+
+  if(spread <= dewDanger){ issues.push(`Punto de rocío muy cercano (Δ${spread.toFixed(1)}°C) — alto riesgo de niebla`); level='danger'; }
+  else if(spread <= dewWarn){ issues.push(`Punto de rocío cercano (Δ${spread.toFixed(1)}°C) — riesgo de niebla/condensación`); if(level==='safe') level='warn'; }
+
+  if(precip >= 50){ issues.push(`Probabilidad de precipitación ${precip}%`); level='danger'; }
+  else if(precip >= 20){ issues.push(`Probabilidad de precipitación ${precip}%`); if(level==='safe') level='warn'; }
+
+  if(vis !== '—' && parseFloat(vis) < visDanger){ issues.push(`Visibilidad reducida (${vis} km)`); level='danger'; }
+  else if(vis !== '—' && parseFloat(vis) < visWarn){ issues.push(`Visibilidad limitada (${vis} km)`); if(level==='safe') level='warn'; }
+
+  if(kpVal !== null && kpVal >= 6){ issues.push(`Índice Kp elevado (${kpVal.toFixed(1)}) — posible interferencia GPS/brújula`); if(level==='safe') level='warn'; }
+
+  const headline = level==='safe' ? 'APTO PARA VOLAR' : level==='warn' ? 'PRECAUCIÓN' : 'NO APTO PARA VOLAR';
+  const reasonText = issues.length ? issues.join(' · ') : 'Condiciones dentro de parámetros normales de operación.';
+
+  const flagWind = (gust>=windDangerG||wind>=windDangerS) ? 'flag-danger' : (gust>=windWarnG||wind>=windWarnS) ? 'flag-warn' : '';
+  const flagDew = spread<=dewDanger ? 'flag-danger' : spread<=dewWarn ? 'flag-warn' : '';
+  const flagVis = (vis!=='—'&&parseFloat(vis)<visDanger) ? 'flag-danger' : (vis!=='—'&&parseFloat(vis)<visWarn) ? 'flag-warn' : '';
+  const flagPrecip = precip>=50 ? 'flag-danger' : precip>=20 ? 'flag-warn' : '';
+  const flagKp = (kpVal!==null && kpVal>=6) ? 'flag-warn' : '';
+
+  const vnocBlock = isNight ? `
+    <div class="vnoc">
+      ⚠ MODO NOCTURNO — según DAN 151 (DGAC): credencial VNOC vigente, luces de navegación y estroboscópicas obligatorias, autorización de vuelo nocturno activa.
+    </div>` : '';
+
+  document.getElementById('app').innerHTML = `
+    ${vnocBlock}
+    <div class="status ${level}">
+      <div class="label">Evaluación automática · ${isNight?'nocturno':'diurno'}</div>
+      <div class="headline">${headline}</div>
+      <div class="reason">${reasonText}</div>
+    </div>
+
+    <div class="section-title">Atmósfera</div>
+    <div class="grid">
+      <div class="card">
+        <div class="k">Temperatura</div>
+        <div class="v">${temp.toFixed(1)}<span class="unit">°C</span></div>
+        <div class="sub">Punto de rocío: ${dew.toFixed(1)}°C</div>
+      </div>
+      <div class="card ${flagDew}">
+        <div class="k">Margen a saturación</div>
+        <div class="v">${spread.toFixed(1)}<span class="unit">°C</span></div>
+        <div class="sub">${spread<=dewWarn ? 'riesgo de niebla' : 'sin riesgo inmediato'}</div>
+      </div>
+      <div class="card ${flagPrecip}">
+        <div class="k">Prob. precipitación</div>
+        <div class="v">${precip}<span class="unit">%</span></div>
+      </div>
+      <div class="card">
+        <div class="k">Nubosidad</div>
+        <div class="v">${cloud}<span class="unit">%</span></div>
+      </div>
+      <div class="card ${flagVis}">
+        <div class="k">Visibilidad</div>
+        <div class="v">${vis}<span class="unit">km</span></div>
+      </div>
+      <div class="card ${flagKp}">
+        <div class="k">Índice Kp</div>
+        <div class="v">${(kpVal!==null && !isNaN(kpVal)) ? kpVal.toFixed(2) : '—'}</div>
+        <div class="sub">${kpSrc || 'sin datos'}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Viento (límite ${windDangerG} km/h ráfaga)</div>
+    <div class="grid">
+      <div class="card ${flagWind}">
+        <div class="k">Sostenido</div>
+        <div class="v">${wind.toFixed(0)}<span class="unit">km/h</span></div>
+      </div>
+      <div class="card ${flagWind}">
+        <div class="k">Ráfagas</div>
+        <div class="v">${gust.toFixed(0)}<span class="unit">km/h</span></div>
+      </div>
+      <div class="card wide">
+        <div>
+          <div class="k">Dirección</div>
+          <div class="v">${dirToCompass(windDir)}<span class="unit">${windDir.toFixed(0)}°</span></div>
+        </div>
+        <div class="compass">${compassSVG(windDir)}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Sol</div>
+    <div class="grid">
+      <div class="card">
+        <div class="k">Amanecer</div>
+        <div class="v" style="font-size:16px">${fmtTime(data.daily.sunrise[0])}</div>
+      </div>
+      <div class="card">
+        <div class="k">Atardecer</div>
+        <div class="v" style="font-size:16px">${fmtTime(data.daily.sunset[0])}</div>
+      </div>
+    </div>
+  `;
+}
+
+async function init(useFallback){
+  try{
+    let lat, lon, label;
+    const isSecure = window.isSecureContext === true;
+    if(!useFallback && !isSecure){
+      document.getElementById('app').innerHTML = `
+        <div class="err">
+          Este archivo se abrió sin HTTPS, así que el navegador bloquea el GPS por seguridad.<br><br>
+          Sube el archivo a Netlify/GitHub Pages para usar tu ubicación real, o continúa con la ubicación aproximada.<br><br>
+          <button class="btn" onclick="init(true)">Usar ubicación aproximada (Rengo)</button>
+        </div>`;
+      return;
+    }
+    if(!useFallback && navigator.geolocation){
+      const pos = await new Promise((res, rej)=>{
+        navigator.geolocation.getCurrentPosition(res, rej, {timeout:6000});
+      });
+      lat = pos.coords.latitude; lon = pos.coords.longitude;
+      label = `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+    } else {
+      lat = RENGO_FALLBACK.lat; lon = RENGO_FALLBACK.lon; label = RENGO_FALLBACK.name;
+    }
+    document.getElementById('locLabel').textContent = label;
+
+    const [weather, kp] = await Promise.all([fetchWeather(lat, lon), fetchKp()]);
+
+    // auto-detección de modo según amanecer/atardecer reales del día
+    const now = new Date();
+    const sunrise = new Date(weather.daily.sunrise[0]);
+    const sunset = new Date(weather.daily.sunset[0]);
+    isNight = (now < sunrise || now > sunset);
+    document.getElementById('btnDay').classList.toggle('active', !isNight);
+    document.getElementById('btnNight').classList.toggle('active', isNight);
+
+    render(weather, kp);
+  }catch(e){
+    document.getElementById('app').innerHTML = `
+      <div class="err">
+        No se pudo obtener la ubicación o los datos (${e.message||'error de red'}).<br><br>
+        <button class="btn" onclick="init(true)">Usar ubicación aproximada (Rengo)</button>
+      </div>`;
+  }
+}
+
+init(false);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

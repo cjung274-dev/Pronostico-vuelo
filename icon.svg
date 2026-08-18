@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="36" fill="#0A0E13"/>
+  <rect x="26" y="26" width="148" height="148" rx="18" fill="none" stroke="#FFB020" stroke-width="8"/>
+  <text x="100" y="118" font-family="ui-monospace,monospace" font-size="52" font-weight="700"
+    text-anchor="middle" fill="#FFB020">RPA</text>
+</svg>
