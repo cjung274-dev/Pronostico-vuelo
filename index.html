@@ -172,6 +172,17 @@
 </div>
 
 <script>
+window.addEventListener('error', function(e){
+  const app = document.getElementById('app');
+  if(app) app.innerHTML = `
+    <div class="err">
+      <b>Error en la app:</b><br>
+      ${e.message}<br>
+      <span style="font-size:9px">${e.filename||''}:${e.lineno||''}</span><br><br>
+      Manda una captura de este mensaje para poder corregirlo.
+    </div>`;
+});
+
 const RENGO_FALLBACK = { lat: -34.4083, lon: -70.8642, name: "Rengo, O'Higgins (aprox.)" };
 let isNight = false;
 let isImperial = false;
@@ -455,13 +466,3 @@ function render(data, kp){
 
   const hIdx = nearestHourIndex(data.hourly.time);
   const h = data.hourly;
-
-  const temp = h.temperature_2m[hIdx];
-  const rh = h.relative_humidity_2m[hIdx];
-  const dew = dewPoint(temp, rh);
-  const spread = temp - dew;
-  const wind = h.wind_speed_10m[hIdx];
-  const gust = h.wind_gusts_10m[hIdx];
-  const windDir = h.wind_direction_10m[hIdx];
-  const precip = h.precipitation_probability ? h.precipitation_probability[hIdx] : 0;
-  cons
