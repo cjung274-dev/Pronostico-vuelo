@@ -181,15 +181,40 @@ async function fetchGFZKp(){
   throw new Error('GFZ sin valor válido');
 }
 
+async function fetchNOAAKpViaProxy(){
+  // último recurso: proxy público que agrega cabeceras CORS por si el navegador bloquea la fuente directa
+  const target = encodeURIComponent('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+  const r = await fetch(`https://api.allorigins.win/raw?url=${target}`);
+  if(!r.ok) throw new Error('proxy HTTP '+r.status);
+  const j = await r.json();
+  for(let i=j.length-1; i>0; i--){
+    const val = parseFloat(j[i][1]);
+    if(!isNaN(val)) return {value:val, source:'NOAA SWPC (proxy)'};
+  }
+  throw new Error('proxy sin valor válido');
+}
+
 async function fetchKp(){
-  // se intentan ambas fuentes EN PARALELO; se usa la primera que responda con éxito
+  // se intentan las fuentes directas EN PARALELO primero
   const results = await Promise.allSettled([fetchNOAAKp(), fetchGFZKp()]);
+  const errors = [];
   results.forEach((r,i)=>{
-    if(r.status==='rejected') console.warn(['NOAA','GFZ'][i]+' falló:', r.reason.message);
+    if(r.status==='rejected'){
+      const msg = ['NOAA','GFZ'][i]+': '+r.reason.message;
+      console.warn(msg); errors.push(msg);
+    }
   });
   const ok = results.find(r=>r.status==='fulfilled');
   if(ok) return ok.value;
-  return {value:null, source:null};
+
+  // si ambas fallaron (probable bloqueo CORS), se intenta vía proxy como último recurso
+  try{
+    return await fetchNOAAKpViaProxy();
+  }catch(e){
+    errors.push('Proxy: '+e.message);
+    console.warn('Proxy también falló:', e.message);
+    return {value:null, source:null, errors};
+  }
 }
 
 async function fetchWeather(lat, lon){
@@ -313,7 +338,7 @@ function render(data, kp){
       <div class="card ${flagKp}">
         <div class="k">Índice Kp</div>
         <div class="v">${(kpVal!==null && !isNaN(kpVal)) ? kpVal.toFixed(2) : '—'}</div>
-        <div class="sub">${kpSrc || 'sin datos'}</div>
+        <div class="sub" style="font-size:9px">${kpSrc || (kp&&kp.errors ? kp.errors.join(' · ') : 'sin datos')}</div>
       </div>
     </div>
 
