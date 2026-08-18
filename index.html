@@ -339,6 +339,16 @@ function extractKpFromAny(j){
   return null;
 }
 
+async function fetchWithTimeout(url, ms=5000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  try{
+    return await fetch(url, {signal: ctrl.signal});
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function fetchNOAAKp(){
   const urls = [
     'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
@@ -347,7 +357,7 @@ async function fetchNOAAKp(){
   let lastErr;
   for(const url of urls){
     try{
-      const r = await fetch(url);
+      const r = await fetchWithTimeout(url, 4000);
       if(!r.ok) throw new Error('HTTP '+r.status);
       const j = await r.json();
       const v = extractKpFromAny(j);
@@ -363,7 +373,7 @@ async function fetchGFZKp(){
   const start = new Date(now.getTime() - 24*3600*1000);
   const iso = d => d.toISOString().slice(0,19);
   const url = `https://kp.gfz.de/app/json/?start=${iso(start)}&end=${iso(now)}&index=Kp&status=def`;
-  const r = await fetch(url);
+  const r = await fetchWithTimeout(url, 4000);
   if(!r.ok) throw new Error('GFZ HTTP '+r.status);
   const j = await r.json();
   const vals = j.Kp || j.kp || j.index || (Array.isArray(j) ? j.map(row=>row[1]) : null);
@@ -379,7 +389,7 @@ async function fetchGFZKp(){
 async function fetchNOAAKpViaProxy(){
   // último recurso: proxy público que agrega cabeceras CORS por si el navegador bloquea la fuente directa
   const target = encodeURIComponent('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json');
-  const r = await fetch(`https://api.allorigins.win/raw?url=${target}`);
+  const r = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${target}`, 6000);
   if(!r.ok) throw new Error('proxy HTTP '+r.status);
   const j = await r.json();
   const v = extractKpFromAny(j);
@@ -414,7 +424,7 @@ async function fetchWeather(lat, lon){
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,wind_direction_10m`
     + `&daily=sunrise,sunset&timezone=auto&wind_speed_unit=kmh&forecast_days=3`;
-  const r = await fetch(url);
+  const r = await fetchWithTimeout(url, 8000);
   return r.json();
 }
 
@@ -454,10 +464,4 @@ function render(data, kp){
   const gust = h.wind_gusts_10m[hIdx];
   const windDir = h.wind_direction_10m[hIdx];
   const precip = h.precipitation_probability ? h.precipitation_probability[hIdx] : 0;
-  const cloud = h.cloud_cover[hIdx];
-  const vis = h.visibility ? (h.visibility[hIdx]/1000).toFixed(1) : '—';
-
-  // --- umbrales: procedimiento DGR (viento 40km/h), DAN 151 (nocturno=VNOC+luces),
-  //     límites de fábrica DJI M30/M30T (15 m/s=54km/h vuelo, 12m/s=43km/h despegue/aterrizaje) ---
-  let issues = [];
-  let l
+  const cloud = h.cloud
