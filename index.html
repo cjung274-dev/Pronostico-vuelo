@@ -145,7 +145,7 @@
 <div id="app">
   <div class="loading">
     <div class="spin"></div>
-    Obteniendo datos meteorológicos…
+    <div id="loadingMsg">Solicitando ubicación…</div>
   </div>
 </div>
 
@@ -464,4 +464,4 @@ function render(data, kp){
   const gust = h.wind_gusts_10m[hIdx];
   const windDir = h.wind_direction_10m[hIdx];
   const precip = h.precipitation_probability ? h.precipitation_probability[hIdx] : 0;
-  const cloud = h.cloud
+  cons
