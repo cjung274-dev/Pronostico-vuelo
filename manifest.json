@@ -1,0 +1,26 @@
+{
+  "name": "Sentinel Air — Condición de Vuelo RPA",
+  "short_name": "Sentinel Air",
+  "description": "Evaluación de condiciones meteorológicas y geofísicas para operaciones RPAS, con bitácora de vuelos y turnos.",
+  "lang": "es-CL",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0E13",
+  "theme_color": "#0A0E13",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
