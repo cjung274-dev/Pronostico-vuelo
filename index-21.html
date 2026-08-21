@@ -1,0 +1,2747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0E13">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vuelo RPA">
+<title>APTO/VUELO — Condiciones para RPAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Audiowide&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    /* tema NOCTURNO (oscuro) — por defecto */
+    --bg:#0A0E13;
+    --panel:#121820;
+    --panel2:#161D26;
+    --line:#22303C;
+    --amber:#FFB020;
+    --amber-dim:#8A6112;
+    --safe:#39D98A;
+    --warn:#FFB020;
+    --danger:#FF5252;
+    --text:#E7EDF3;
+    --muted:#7C8B99;
+    --mono: 'IBM Plex Mono', ui-monospace, "SF Mono", "Roboto Mono", "Courier New", monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    /* tarjeta de estado (APTO/PRECAUCIÓN/NO APTO) y chips asociados — tema oscuro */
+    --status-safe-bg: linear-gradient(135deg,#0E2A1F,#0B1B15);
+    --status-safe-border:#1E5C3E;
+    --status-warn-bg: linear-gradient(135deg,#2A2110,#1B160B);
+    --status-warn-border:#5C4A1E;
+    --status-danger-bg: linear-gradient(135deg,#2A1212,#1B0B0B);
+    --status-danger-border:#5C1E1E;
+    --badge-safe-bg:#0E2A1F;
+    --badge-warn-bg:#2A2110;
+    --badge-danger-bg:#2A1212;
+    --vnoc-bg:#1A1204;
+    --vnoc-border: var(--amber-dim);
+    --err-bg:#2A1212;
+    --err-border:#5C1E1E;
+    --err-text:#FFB3B3;
+  }
+  body.theme-day{
+    /* tema DIURNO (claro) — cielo despejado, mismo acento ámbar como identidad de marca */
+    --bg:#EFF3F6;
+    --panel:#FFFFFF;
+    --panel2:#F4F7F9;
+    --line:#D8E0E6;
+    --amber:#C97A00;
+    --amber-dim:#FFE1B0;
+    --safe:#128A57;
+    --warn:#B36A00;
+    --danger:#C62F22;
+    --text:#101820;
+    --muted:#5C6B78;
+    /* tarjeta de estado — versión clara: fondo tintado suave + borde de color, no el gradiente oscuro reciclado */
+    --status-safe-bg: linear-gradient(135deg,#DEF7EA,#F1FBF5);
+    --status-safe-border:#7FDBA8;
+    --status-warn-bg: linear-gradient(135deg,#FFEECB,#FFF8EA);
+    --status-warn-border:#F0BE5E;
+    --status-danger-bg: linear-gradient(135deg,#FBDEDA,#FDF0EE);
+    --status-danger-border:#EB9A8E;
+    --badge-safe-bg:#DEF7EA;
+    --badge-warn-bg:#FFEECB;
+    --badge-danger-bg:#FBDEDA;
+    --vnoc-bg:#FFEECB;
+    --vnoc-border:#F0BE5E;
+    --err-bg:#FBDEDA;
+    --err-border:#EB9A8E;
+    --err-text:#8C231A;
+  }
+  body{transition:background .4s ease, color .4s ease;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;}
+  body{padding:14px 14px 40px;max-width:480px;margin:0 auto;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 16px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .mark{width:30px;height:30px;border:2px solid var(--amber);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--amber);font-size:12px;transform:rotate(-6deg);}
+  .brand h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700;color:var(--text);}
+  .brand .sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em;}
+  .clock{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;}
+
+  .status{
+    border-radius:10px;padding:18px 16px;margin-bottom:14px;position:relative;overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .status.safe{background:var(--status-safe-bg);border-color:var(--status-safe-border);}
+  .status.warn{background:var(--status-warn-bg);border-color:var(--status-warn-border);}
+  .status.danger{background:var(--status-danger-bg);border-color:var(--status-danger-border);}
+  .status .label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  .status .headline{font-size:26px;font-weight:800;margin:4px 0 6px;letter-spacing:-.01em;}
+  .status.safe .headline{color:var(--safe);}
+  .status.warn .headline{color:var(--warn);}
+  .status.danger .headline{color:var(--danger);}
+  .status .reason{font-size:13px;color:var(--muted);line-height:1.5;font-family:var(--mono);}
+
+  .risk-summary{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+  .risk-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+  .risk-count{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .risk-count b{color:var(--text);}
+  .risk-toggle .chev{font-size:10px;color:var(--muted);opacity:.75;flex-shrink:0;}
+  .risk-factors{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
+  .risk-factor{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--text);}
+  .risk-factor .rf-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .risk-factor.safe .rf-dot{background:var(--safe);}
+  .risk-factor.warn .rf-dot{background:var(--warn);}
+  .risk-factor.danger .rf-dot{background:var(--danger);}
+  .risk-factor .rf-label{flex-shrink:0;}
+  .risk-factor .rf-val{color:var(--muted);margin-left:auto;font-size:11px;}
+  .risk-factor .rf-tag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:6px;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-height:76px;}
+  .card .k{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--mono);margin-bottom:6px;}
+  .card .v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);}
+  .card .v .unit{font-size:12px;color:var(--muted);font-weight:400;margin-left:2px;}
+  .card .sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+  .card.flag-warn{border-color:var(--amber-dim);}
+  .card.flag-warn .v{color:var(--amber);}
+  .card.flag-danger{border-color:#5C1E1E;}
+  .card.flag-danger .v{color:var(--danger);}
+  .card.wide{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;}
+
+  .compass{width:108px;height:108px;position:relative;flex-shrink:0;}
+  .compass-legend{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:12px;color:var(--muted);}
+  #compassStatus{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .compass-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+  .compass svg{width:100%;height:100%;overflow:visible;}
+  .card.wide{min-height:118px;}
+
+  .section-title{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:20px 2px 8px;}
+
+  .loading{text-align:center;padding:60px 10px;color:var(--muted);font-family:var(--mono);font-size:12px;}
+  .loading .spin{width:22px;height:22px;border:2px solid var(--line);border-top-color:var(--amber);border-radius:50%;margin:0 auto 14px;animation:sp 0.8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  .foot{margin-top:22px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;line-height:1.6;}
+  .foot a{color:var(--amber);text-decoration:none;}
+
+  .err{background:var(--err-bg);border:1px solid var(--err-border);color:var(--err-text);padding:12px;border-radius:8px;font-size:12px;font-family:var(--mono);line-height:1.5;}
+
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 12px;border-radius:6px;cursor:pointer;letter-spacing:.05em;}
+  .btn-mini{background:none;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:6px 12px;border-radius:6px;cursor:pointer;}
+  .btn-mini:active{background:var(--panel2);}
+  .btn:active{background:var(--amber-dim);}
+  .toggle{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:14px;}
+  .toggle button{flex:1;background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:8px 0;border-radius:6px;text-transform:uppercase;}
+  .toggle button.active{background:var(--amber-dim);color:var(--amber);font-weight:700;}
+
+  .vnoc{background:var(--vnoc-bg);border:1px solid var(--vnoc-border);border-radius:8px;padding:10px 12px;margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.5;}
+  .vnoc-wrap{margin-bottom:14px;}
+  .vnoc-compact{display:flex;align-items:center;gap:8px;background:var(--vnoc-bg);border:1px solid var(--vnoc-border);border-radius:8px;padding:9px 12px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--amber);user-select:none;}
+  .vnoc-compact .vnoc-icon{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--amber);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;font-family:var(--sans);font-style:italic;}
+  .vnoc-compact .vnoc-label{flex:1;letter-spacing:.02em;}
+  .vnoc-compact .chev{flex-shrink:0;opacity:.75;font-size:10px;}
+
+  .hourstrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+  .hourcard{flex:0 0 auto;width:64px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center;font-family:var(--mono);}
+  .hourcard.now{border-color:var(--amber);}
+  .hourcard .hc-time{font-size:10px;color:var(--muted);}
+  .hourcard .hc-dot{width:8px;height:8px;border-radius:50%;margin:5px auto;}
+  .hourcard .hc-dot.safe{background:var(--safe);}
+  .hourcard .hc-dot.warn{background:var(--warn);}
+  .hourcard .hc-dot.danger{background:var(--danger);}
+  .hourcard .hc-temp{font-size:12px;font-weight:700;}
+  .hourcard .hc-wind{font-size:10px;color:var(--muted);}
+
+  .panel-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .checklist-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;}
+  .checklist-item:last-child{border-bottom:none;}
+  .checklist-item input{width:18px;height:18px;accent-color:var(--amber);flex-shrink:0;}
+  .checklist-item label{flex:1;}
+  .checklist-item.checked label{color:var(--muted);text-decoration:line-through;}
+  .checklist-progress{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+  .checklist-progress .bar{flex:1;height:4px;background:var(--line);border-radius:2px;margin:0 10px;overflow:hidden;}
+  .checklist-progress .bar-fill{height:100%;background:var(--amber);transition:width .3s;}
+
+  .btn-primary{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber);font-family:var(--mono);font-size:12px;padding:10px 14px;border-radius:6px;width:100%;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+  .btn-primary:active{background:var(--amber);color:#1A1204;}
+
+  .log-entry{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-family:var(--mono);font-size:12px;}
+  .log-entry .le-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .log-entry .le-status{font-weight:700;font-size:11px;text-transform:uppercase;padding:2px 8px;border-radius:4px;}
+  .log-entry .le-status.safe{background:var(--badge-safe-bg);color:var(--safe);}
+  .log-entry .le-status.warn{background:var(--badge-warn-bg);color:var(--warn);}
+  .log-entry .le-status.danger{background:var(--badge-danger-bg);color:var(--danger);}
+  .log-entry .le-detail{color:var(--muted);font-size:11px;line-height:1.5;}
+  .log-entry .le-del{background:none;border:none;color:var(--muted);font-size:11px;padding:2px 6px;}
+  .log-empty{color:var(--muted);font-family:var(--mono);font-size:12px;text-align:center;padding:20px 0;}
+
+  .accordion-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;}
+  .accordion-header .chev{transition:transform .25s;color:var(--muted);font-size:12px;}
+  .accordion-header.open .chev{transform:rotate(180deg);}
+  .accordion-body{overflow:hidden;max-height:0;transition:max-height .3s ease;}
+  .accordion-body.open{max-height:4000px;}
+
+  .turno-bar{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-family:var(--mono);}
+  .turno-bar.active{border-color:var(--safe);background:linear-gradient(135deg,#0E2A1F22,var(--panel));}
+  .turno-row{display:flex;justify-content:space-between;align-items:center;}
+  .turno-info{font-size:12px;color:var(--muted);}
+  .turno-info b{color:var(--text);}
+
+  .fly-bar{border-radius:10px;padding:14px;margin-bottom:14px;font-family:var(--mono);border:1px solid var(--line);background:var(--panel);}
+  .fly-bar.running{border-color:var(--safe);background:linear-gradient(135deg,#0E2A1F44,var(--panel));}
+  .fly-bar.running.emg{border-color:var(--danger);background:linear-gradient(135deg,#2A121244,var(--panel));}
+  .fly-clock{font-size:34px;font-weight:700;letter-spacing:.04em;color:var(--safe);line-height:1.1;text-align:center;}
+  .fly-bar.emg .fly-clock{color:var(--danger);}
+  .fly-meta{font-size:11px;color:var(--muted);text-align:center;margin-top:4px;}
+  .fly-btn{width:100%;border:none;border-radius:9px;padding:15px;font-family:var(--mono);font-size:14px;font-weight:700;cursor:pointer;}
+  .fly-btn.go{background:var(--safe);color:#062015;}
+  .fly-btn.stop{background:var(--danger);color:#2A0A0A;}
+  .fly-btn.emg{background:var(--danger);color:#2A0A0A;}
+  .fly-btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:400;padding:9px;}
+  .fly-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:#2A1212;color:var(--danger);letter-spacing:.05em;}
+  .fly-tag.retro{background:var(--amber-dim);color:var(--amber);}
+
+  .radio-row{display:flex;gap:10px;margin:10px 0;}
+  .radio-opt{flex:1;text-align:center;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:12px;cursor:pointer;}
+  .radio-opt.selected{border-color:var(--amber);background:var(--amber-dim);color:var(--amber);}
+  .field-text{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:var(--mono);font-size:12px;margin-top:6px;}
+  /* etiquetas compactas: menos peso visual que un párrafo, sin perder legibilidad */
+  .mini-label{display:block;margin-top:12px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);}
+  .mini-label .opt{opacity:.55;font-size:10px;letter-spacing:0;}
+  .micro-label{margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.8;}
+  /* sin esto, el icono nativo del selector de hora/fecha queda casi invisible sobre el panel oscuro */
+  input[type="time"].field-text, input[type="date"].field-text{color-scheme:dark;}
+  body.theme-day input[type="time"].field-text, body.theme-day input[type="date"].field-text{color-scheme:light;}
+
+  .icon-btn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);width:34px;height:34px;border-radius:8px;font-size:16px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0;}
+  .icon-btn svg{width:17px;height:17px;display:block;}
+  .icon-btn.emg-btn{border-color:#5A2020;color:var(--danger);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.02em;}
+  .icon-btn.emg-btn.live{background:var(--danger);color:#2A0A0A;border-color:var(--danger);animation:emgPulse 1.6s ease-in-out infinite;}
+  @keyframes emgPulse{0%,100%{opacity:1}50%{opacity:.62}}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;}
+  .modal-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:18px;width:100%;max-height:85vh;overflow-y:auto;}
+  .modal-panel h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px;font-family:var(--mono);}
+  .modal-panel .modal-sub{font-size:10px;line-height:1.5;color:var(--muted);opacity:.85;font-family:var(--mono);margin-bottom:14px;}
+  .field-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);}
+  .field-row label{font-family:var(--mono);font-size:12px;color:var(--text);}
+  .field-row input{width:70px;background:var(--panel2);border:1px solid var(--line);color:var(--amber);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:6px;text-align:right;}
+  .field-group-title{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 4px;}
+  .modal-actions{display:flex;gap:8px;margin-top:18px;}
+  .modal-actions button{flex:1;padding:11px;border-radius:8px;font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;}
+
+  .moon-row{display:flex;align-items:center;gap:10px;}
+  .moon-emoji{font-size:27px;line-height:1;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">RPA</div>
+    <div>
+      <h1>Condición de Vuelo</h1>
+      <div class="sub" id="locLabel">localizando…</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;">
+    <button class="icon-btn emg-btn" id="topEmgBtn" onclick="topEmergencyAction()" style="display:none"></button>
+    <button class="icon-btn" onclick="openSettings()" title="Ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v0a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg></button>
+    <button class="icon-btn" onclick="exportReport()" title="Capturar condición actual" aria-label="Capturar condición actual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  </div>
+</div>
+<div class="clock" id="clockLabel" style="text-align:right;margin:-10px 2px 10px 0">—</div>
+
+<div id="settingsModal"></div>
+
+<div class="toggle">
+  <button id="btnDay" class="active" onclick="setMode(false)">☀ Diurno</button>
+  <button id="btnNight" onclick="setMode(true)">☾ Nocturno</button>
+</div>
+
+<div id="app" data-export-target="1">
+  <div class="loading">
+    <div class="spin"></div>
+    <div id="loadingMsg">Solicitando ubicación…</div>
+  </div>
+</div>
+
+<div class="turno-bar" id="turnoBar"></div>
+<div id="flyBar"></div>
+
+<div class="panel-box">
+  <div class="accordion-header" id="aircraftHeader" onclick="toggleAccordion('aircraft')">
+    <span class="section-title" style="margin:0">Aeronave designada <span id="aircraftCount" style="color:var(--amber)"></span></span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="accordion-body" id="aircraftBody">
+    <div style="margin:12px 0"><button class="btn-primary" onclick="openAircraftModal()">+ Agregar aeronave</button></div>
+    <div id="aircraftEntries"></div>
+  </div>
+</div>
+
+<div class="panel-box">
+  <div class="accordion-header" id="chkHeader" onclick="toggleAccordion('chk')">
+    <span class="section-title" style="margin:0">Checklist pre-vuelo <span id="chkCount" style="color:var(--amber)"></span></span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="accordion-body" id="chkBody">
+    <div class="modal-sub" style="margin:10px 0 0">Se reinicia automáticamente al iniciar cada turno nuevo.</div>
+    <div class="checklist-progress" style="margin-top:8px">
+      <div class="bar"><div class="bar-fill" id="chkBar" style="width:0%"></div></div>
+      <button class="btn" onclick="resetChecklist()" style="padding:4px 8px;font-size:11px">Reiniciar</button>
+    </div>
+    <div id="checklistItems"></div>
+  </div>
+</div>
+
+<div class="panel-box">
+  <div class="accordion-header" id="turnoHistHeader" onclick="toggleAccordion('turnoHist')">
+    <span class="section-title" style="margin:0">Registro de turnos <span id="turnoHistCount" style="color:var(--amber)"></span></span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="accordion-body" id="turnoHistBody">
+    <div id="turnoHistEntries" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div class="panel-box">
+  <div class="accordion-header" id="logHeader" onclick="toggleAccordion('log')">
+    <span class="section-title" style="margin:0">Bitácora de vuelos <span id="logCount" style="color:var(--amber)"></span></span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="accordion-body" id="logBody">
+    <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+      <button class="btn-primary" onclick="openSaveFlightModal()" style="flex:1;min-width:150px">+ Registrar vuelo</button>
+      <button class="btn" onclick="exportLogHTML()" style="flex-shrink:0">HTML</button>
+      <button class="btn" onclick="exportLogPNG()" style="flex-shrink:0">PNG</button>
+    </div>
+    <div id="logEntries"></div>
+  </div>
+</div>
+
+<div id="flightModal"></div>
+
+  <div class="panel-box">
+    <div class="accordion-header" id="normHeader" onclick="toggleAccordion('norm')">
+      <span class="section-title" style="margin:0">Normativa DGAC vigente</span>
+      <span class="chev">▾</span>
+    </div>
+    <div class="accordion-body" id="normBody">
+      <div style="margin-top:12px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text)">
+        <b style="color:var(--amber)">DAN 151 Ed.4 (DGAC, abr. 2026)</b> — norma vigente, reemplazó la Ed.3 (may. 2024). Aplica a toda persona natural o jurídica que opere RPAS en Chile, en áreas pobladas o no pobladas (151.003).<br><br>
+        <b style="color:var(--amber)">Condiciones de vuelo (151.103)</b> — VMC obligatorio en toda operación · contacto visual permanente VLOS o EVLOS · techo máximo 400 pies / 120 m AGL en VLOS (más altura requiere autorización DGAC) · no exceder el 80% de la autonomía de batería · margen de 20 m vertical y 30 m horizontal sobre personas/infraestructura no involucradas · mínimo 3 millas náuticas del centro de un aeródromo · mínimo 10 km de fronteras internacionales sin autorización DIFROL.<br><br>
+        <b style="color:var(--amber)">Vuelo nocturno — VNOC (151.105.a)</b> — exige credencial con habilitación VNOC, procedimiento de vigilancia aérea aprobado por la DGAC, límite de 300 pies / 100 m dentro del área de trabajo, capacidad de visualización nocturna, luces de navegación/posición/estroboscópicas encendidas de forma constante y visibles a no menos de 500 m, sensores de detección de obstáculos, y observador con credencial y habilitación VNOC.<br><br>
+        <b style="color:var(--amber)">Operación sobre personas (Apéndice G)</b> — cada RPA se clasifica en una categoría de severidad S1–S5 según su energía de impacto (½·m·v²), cruzada con el nivel de exposición de personas del área (E1–E5) en una matriz de aceptabilidad. A mayor energía de impacto, más restrictiva la operación sobre zonas con gente.<br><br>
+        <b style="color:var(--amber)">Zonas restringidas (151.107)</b> — prohibido volar sobre instalaciones militares, penitenciarias y estratégicas (Art. 82 Código Aeronáutico), zonas prohibidas/restringidas publicadas en AIP/NOTAM/ASPE, y zonas de combate de incendios forestales.<br><br>
+        <span style="color:var(--muted)">El Índice Kp forma parte del temario teórico obligatorio de meteorología (Apéndice E), pero la norma no fija ningún umbral operacional sobre él. Esta app lo muestra solo como referencia complementaria de buena práctica del sector, no como exigencia DGAC.</span><br><br>
+        <span style="color:var(--muted)">Esta app es una ayuda de planificación, no un instrumento de cumplimiento regulatorio. Verifica siempre el texto oficial vigente en dgac.gob.cl y tu Manual de Operaciones antes de volar.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Datos: Open-Meteo · Kp: NOAA SWPC / GFZ Potsdam<br>
+    Umbrales de evaluación: buenas prácticas RPAS internacionales (viento, punto de rocío, Kp como referencia) y DAN 151 Ed.4 (DGAC, abr. 2026) para VMC, techo 400 ft/120 m AGL y vuelo nocturno (VNOC)<br>
+    No reemplaza el juicio operacional del piloto ni la normativa DGAC vigente.
+  </div>
+
+<script>
+window.addEventListener('error', function(e){
+  const app = document.getElementById('app');
+  if(app) app.innerHTML = `
+    <div class="err">
+      <b>Error en la app:</b><br>
+      ${e.message}<br>
+      <span style="font-size:11px">${e.filename||''}:${e.lineno||''}</span><br><br>
+      Manda una captura de este mensaje para poder corregirlo.
+    </div>`;
+});
+
+const RENGO_FALLBACK = { lat: -34.4083, lon: -70.8642, name: "Rengo, O'Higgins (aprox.)" };
+let isNight = false;
+let isImperial = false;
+let lastWeather = null, lastKp = null;
+
+// ============ TEMA VISUAL (claro/oscuro) — independiente del modo diurno/nocturno operacional ============
+// el modo Diurno/Nocturno de abajo sigue controlando los umbrales de evaluación y el aviso VNOC;
+// el tema (colores) puede seguir ese modo automáticamente, o fijarse manualmente sin importar la hora.
+const THEME_KEY = 'rpa_theme_pref'; // 'auto' | 'light' | 'dark'
+let themePref = 'auto';
+function loadThemePref(){ try{ return localStorage.getItem(THEME_KEY) || 'auto'; }catch(e){ return 'auto'; } }
+function saveThemePref(v){ try{ localStorage.setItem(THEME_KEY, v); }catch(e){} }
+function applyTheme(){
+  let showLight;
+  if(themePref === 'light') showLight = true;
+  else if(themePref === 'dark') showLight = false;
+  else showLight = !isNight; // auto: sigue el modo diurno/nocturno operacional
+  document.body.classList.toggle('theme-day', showLight);
+}
+function setThemePref(pref){
+  themePref = pref;
+  saveThemePref(pref);
+  document.getElementById('btnThemeAuto')?.classList.toggle('active', pref === 'auto');
+  document.getElementById('btnThemeLight')?.classList.toggle('active', pref === 'light');
+  document.getElementById('btnThemeDark')?.classList.toggle('active', pref === 'dark');
+  applyTheme();
+}
+function initThemeToggle(){
+  themePref = loadThemePref();
+  applyTheme();
+}
+initThemeToggle();
+
+function setMode(night){
+  isNight = night;
+  document.getElementById('btnDay').classList.toggle('active', !night);
+  document.getElementById('btnNight').classList.toggle('active', night);
+  applyTheme(); // si el tema está en "auto" sigue este modo; si es manual, no se ve afectado
+  if(lastWeather) render(lastWeather, lastKp);
+}
+
+function setUnits(imperial){
+  isImperial = imperial;
+  document.getElementById('btnMetric')?.classList.toggle('active', !imperial);
+  document.getElementById('btnImperial')?.classList.toggle('active', imperial);
+  if(lastWeather) render(lastWeather, lastKp);
+}
+
+const kmhToMph = v => v * 0.621371;
+const cToF = v => v * 9/5 + 32;
+const kmToMi = v => v * 0.621371;
+
+function toKmh(ms){ return ms; } // open-meteo already returns km/h with windspeed_unit=kmh
+
+function dewPoint(tempC, rh){
+  const a=17.625, b=243.04;
+  const gamma = Math.log(rh/100) + (a*tempC)/(b+tempC);
+  return (b*gamma)/(a-gamma);
+}
+
+const COMPASS_DIRS = [
+  {abbr:'N',   name:'Norte'},
+  {abbr:'NNE', name:'Nor-noreste'},
+  {abbr:'NE',  name:'Noreste'},
+  {abbr:'ENE', name:'Este-noreste'},
+  {abbr:'E',   name:'Este'},
+  {abbr:'ESE', name:'Este-sureste'},
+  {abbr:'SE',  name:'Sureste'},
+  {abbr:'SSE', name:'Sur-sureste'},
+  {abbr:'S',   name:'Sur'},
+  {abbr:'SSO', name:'Sur-suroeste'},
+  {abbr:'SO',  name:'Suroeste'},
+  {abbr:'OSO', name:'Oeste-suroeste'},
+  {abbr:'O',   name:'Oeste'},
+  {abbr:'ONO', name:'Oeste-noroeste'},
+  {abbr:'NO',  name:'Noroeste'},
+  {abbr:'NNO', name:'Nor-noroeste'}
+];
+function dirToCompass(deg){
+  return COMPASS_DIRS[Math.round(deg/22.5)%16].abbr;
+}
+function dirToCompassFull(deg){
+  return COMPASS_DIRS[Math.round(deg/22.5)%16].name;
+}
+
+function fmtTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+}
+
+function updateClock(){
+  document.getElementById('clockLabel').textContent =
+    new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ============ AJUSTES PERSONALIZABLES ============
+const SETTINGS_KEY = 'rpa_settings';
+const DEFAULT_SETTINGS = {
+  windDangerG: 40, windDangerS: 35, windWarnG: 28, windWarnS: 22,
+  visDanger: 3, visWarn: 6,
+  dewDanger: 1.5, dewWarn: 2.5,
+  tempDanger: 2, tempWarn: 8,
+  kpDanger: 4, kpWarn: 3,
+  precipDanger: 50, precipWarn: 20
+};
+function loadSettings(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    return saved ? {...DEFAULT_SETTINGS, ...saved} : {...DEFAULT_SETTINGS};
+  }catch(e){ return {...DEFAULT_SETTINGS}; }
+}
+function saveSettingsFromForm(){
+  const s = {};
+  Object.keys(DEFAULT_SETTINGS).forEach(k => {
+    const el = document.getElementById('set_'+k);
+    const v = parseFloat(el.value);
+    s[k] = isNaN(v) ? DEFAULT_SETTINGS[k] : v;
+  });
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  closeSettings();
+  if(lastWeather) render(lastWeather, lastKp);
+}
+function resetSettingsToDefault(){
+  localStorage.removeItem(SETTINGS_KEY);
+  openSettings(); // repinta el formulario con los valores por defecto
+}
+// --- respaldo local: exporta/importa TODO lo que la app guarda en este dispositivo (settings, turnos,
+// vuelos, checklist por turno, aeronaves) como un único archivo. Nunca sale de tu control: no hay servidor
+// de por medio, la exportación es un archivo y la importación lee ese mismo archivo desde tu dispositivo. ---
+function exportAllBackup(){
+  const data = {};
+  for(let i=0; i<localStorage.length; i++){
+    const key = localStorage.key(i);
+    data[key] = localStorage.getItem(key);
+  }
+  const payload = { app: 'condicion-vuelo-rpa', exportedAt: new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `respaldo_rpa_${new Date().toISOString().slice(0,10)}.json`;
+  link.click();
+}
+function importAllBackup(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let payload;
+    try{ payload = JSON.parse(e.target.result); }
+    catch(err){ alert('El archivo no es un respaldo válido (JSON corrupto).'); return; }
+    if(!payload || typeof payload.data !== 'object'){ alert('El archivo no tiene el formato de respaldo esperado.'); return; }
+    if(!confirm('Esto reemplaza TODOS los datos actuales de la app (turnos, vuelos, checklist, aeronaves, ajustes) por los del respaldo. Esta acción no se puede deshacer. ¿Continuar?')) return;
+    localStorage.clear();
+    Object.entries(payload.data).forEach(([k, v]) => localStorage.setItem(k, v));
+    alert('Respaldo restaurado. La app se recargará.');
+    location.reload();
+  };
+  reader.readAsText(file);
+}
+// --- exportación por ciclo: agrupa SOLO los turnos/vuelos del rango de fechas elegido (no acumulativo,
+// a diferencia de "Exportar todo"). Pensado para ciclos de trabajo tipo 7x7, cierre semanal o mensual. ---
+function openCycleExportModal(){
+  const today = new Date();
+  const weekAgo = new Date(today.getTime() - 6*86400000);
+  const toInput = d => d.toISOString().slice(0,10);
+  document.getElementById('flightModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+      <div class="modal-panel">
+        <h2>Exportar ciclo de turnos</h2>
+        <div class="modal-sub">Solo los turnos del rango elegido; no acumula ciclos anteriores.</div>
+
+        <label class="mini-label">Desde</label>
+        <input type="date" class="field-text" id="cycleFrom" value="${toInput(weekAgo)}">
+
+        <label class="mini-label">Hasta</label>
+        <input type="date" class="field-text" id="cycleTo" value="${toInput(today)}">
+
+        <label class="mini-label">Etiqueta <span class="opt">opc.</span></label>
+        <input type="text" class="field-text" id="cycleLabel" placeholder="Ej: 7-7 agosto, semana 1">
+        <div class="modal-sub" style="margin-top:4px">Se usa en el nombre del archivo para ordenarlos por fecha.</div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeFlightModal()">Cancelar</button>
+          <button class="btn-primary" onclick="exportCycleReport()">Generar y descargar</button>
+        </div>
+      </div>
+    </div>`;
+}
+function exportCycleReport(){
+  const fromStr = document.getElementById('cycleFrom')?.value;
+  const toStr = document.getElementById('cycleTo')?.value;
+  const label = (document.getElementById('cycleLabel')?.value || '').trim();
+  if(!fromStr || !toStr){ alert('Selecciona el rango de fechas.'); return; }
+  const from = new Date(fromStr + 'T00:00:00');
+  const to = new Date(toStr + 'T23:59:59');
+  if(from > to){ alert('La fecha "Desde" no puede ser posterior a "Hasta".'); return; }
+
+  const turnos = loadTurnoHistory().filter(t => {
+    const d = new Date(t.startedAt);
+    return d >= from && d <= to;
+  });
+  const turnoIds = new Set(turnos.map(t => t.id).filter(Boolean));
+  // vuelos archivados dentro de cada turno + los que sigan sueltos en la bitácora dentro del rango
+  const archived = turnos.flatMap(t => t.flights || []);
+  const loose = loadLog().filter(e => {
+    if(e.turnoId) return turnoIds.has(e.turnoId);
+    const d = new Date(e.savedAt); // vuelos sin turno asociado: se incluyen si su fecha cae en el rango
+    return d >= from && d <= to;
+  });
+  const flights = [...archived, ...loose];
+
+  if(!turnos.length && !flights.length){ alert('No hay turnos ni vuelos registrados en ese rango de fechas.'); return; }
+
+  const doc = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ciclo de turnos RPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Audiowide&display=swap" rel="stylesheet">
+${reportStyleBlock()}
+</head><body>${buildCycleReportBody(turnos, flights, from, to, label)}</body></html>`;
+  const blob = new Blob([doc], {type:'text/html'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  const slug = label ? label.replace(/\s+/g,'_').toLowerCase() : 'ciclo';
+  link.download = `RPA_${fromStr}_a_${toStr}_${slug}.html`;
+  link.click();
+  closeFlightModal();
+}
+// Detalle de un vuelo en los reportes. Tolera registros sin datos meteorológicos
+// (retroactivos) y distingue tiempo de operación de tiempo de vuelo real.
+function flightDetailRows(e, opts){
+  opts = opts || {};
+  const dur = fmtDuration(e.durationMin);
+  const real = e.realFlightMin != null ? fmtDuration(e.realFlightMin) : null;
+  const hasWx = e.temp != null && e.temp !== '';
+  return `
+        ${e.retroactive ? `<div><b>Registro retroactivo</b> — cargado el ${new Date(e.addedAt).toLocaleString('es-CL')}, no capturado en el momento del vuelo.</div>` : ''}
+        ${e.emergency ? `<div><b>Vuelo de emergencia</b> — ejecutado bajo criterio del piloto al mando.</div>` : ''}
+        <div><b>Ubicación:</b> ${e.locLabel||'—'}</div>
+        ${e.sector ? `<div><b>Sector:</b> ${e.sector}</div>` : ''}
+        ${(e.takeoff && e.landing) ? `<div><b>Operación:</b> ${e.takeoff} – ${e.landing}${dur ? ` · ${dur}` : ''}${e.timedByApp ? ' (cronometrado)' : ''}</div>` : ''}
+        ${real ? `<div><b>Tiempo de vuelo real:</b> ${real}</div>` : ''}
+        ${hasWx
+          ? `<div><b>Condiciones:</b> ${e.temp}°C · viento ${e.wind}/${e.gust} km/h${(opts.windDir && e.windDirLabel) ? ' · dirección ' + e.windDirLabel : ''} · Kp ${e.kp} · ${e.headline}</div>`
+          : `<div><b>Condiciones:</b> sin registro meteorológico</div>`}
+        ${e.aircraftName ? `<div><b>Aeronave:</b> ${e.aircraftName} · ${e.aircraftCategory}</div>` : ''}
+        ${(opts.checklist && e.checklistAtFlight) ? `<div><b>Checklist al momento del vuelo:</b> ${e.checklistAtFlight}</div>` : ''}
+        ${e.reason ? `<div><b>Motivo de cancelación:</b> ${e.reason}</div>` : ''}
+        ${e.notes ? `<div><b>Notas:</b> ${e.notes}</div>` : ''}`;
+}
+function flightRepDate(e){
+  const d = e.savedAt || e.addedAt;
+  return d ? new Date(d).toLocaleString('es-CL') : '—';
+}
+function flightRepStatus(e){
+  const base = e.status==='cancelado' ? 'Cancelado' : 'Realizado';
+  return `Vuelo ${e.flightNumber||'—'} · ${base}${e.emergency ? ' · emergencia' : ''}${e.retroactive ? ' · retroactivo' : ''}`;
+}
+function buildCycleReportBody(turnos, flights, from, to, label){
+  const realizados = flights.filter(e => e.status !== 'cancelado').length;
+  const cancelados = flights.filter(e => e.status === 'cancelado').length;
+
+  const turnoBlocks = turnos.slice().reverse().map(t => {
+    const tFlights = t.flights || (t.id ? flights.filter(e => e.turnoId === t.id) : []);
+    let checklistState = t.checklistState;
+    if(!checklistState){
+      try{ checklistState = JSON.parse(localStorage.getItem('rpa_checklist_turno_' + t.id)) || {}; }catch(e){ checklistState = {}; }
+    }
+    const items = t.checklistItems || CHECKLIST_ITEMS;
+    const chkDone = items.filter((_, i) => !!checklistState[i]).length;
+    const start = new Date(t.startedAt);
+    const end = t.endedAt ? new Date(t.endedAt) : null;
+    const hrs = end ? ((end - start) / 3600000).toFixed(1) : '—';
+    const tMin = tFlights.reduce((acc, e) => acc + (e.durationMin || 0), 0);
+    const rows = tFlights.slice().reverse().map(e => {
+      return `
+      <div class="log-entry">
+        <div class="le-top">
+          <span class="le-status ${e.status==='cancelado' ? 'danger' : 'safe'}">${flightRepStatus(e)}</span>
+          <span class="rep-date">${flightRepDate(e)}</span>
+        </div>
+        <div class="rep-entry-detail">${flightDetailRows(e)}
+        </div>
+      </div>`;
+    }).join('');
+    return `
+      <div class="rep-section-title">${start.toLocaleDateString('es-CL')} · ${t.operator||'Sin especificar'} · turno ${t.mode||'—'} · ${hrs}h · checklist ${chkDone}/${items.length}${tMin ? ` · ${fmtDuration(tMin)} de vuelo` : ''}${t.battery ? ` · baterías: ${t.battery}` : ''}</div>
+      <div>${rows || '<div class="log-empty">Sin vuelos en este turno.</div>'}</div>`;
+  }).join('');
+
+  return `
+    <div class="rep-header">
+      <div class="rep-brand">
+        <div class="rep-mark">RPA</div>
+        <div>
+          <div class="rep-title">${label ? label : 'Ciclo de turnos'}</div>
+          <div class="rep-sub">${from.toLocaleDateString('es-CL')} — ${to.toLocaleDateString('es-CL')} · ${turnos.length} turno(s)</div>
+        </div>
+      </div>
+      <div class="rep-totals">
+        <span class="rep-total safe">${realizados} realizados</span>
+        <span class="rep-total danger">${cancelados} cancelados</span>
+      </div>
+    </div>
+    ${turnoBlocks || '<div class="log-empty">Sin turnos registrados en este rango.</div>'}
+    <div class="rep-foot"><div class="rep-foot-brand">SENTINEL AIR</div><div class="rep-foot-sub">Sistema de condición de vuelo RPA</div></div>
+  `;
+}
+function openSettings(){
+  const s = loadSettings();
+  const field = (key, label, step=1) => `
+    <div class="field-row">
+      <label>${label}</label>
+      <input type="number" step="${step}" id="set_${key}" value="${s[key]}">
+    </div>`;
+  document.getElementById('settingsModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeSettings()">
+      <div class="modal-panel">
+        <h2>Ajustes</h2>
+
+        <div class="field-group-title">Apariencia</div>
+        <div class="toggle">
+          <button id="btnThemeAuto" class="${themePref==='auto'?'active':''}" onclick="setThemePref('auto')">Auto</button>
+          <button id="btnThemeLight" class="${themePref==='light'?'active':''}" onclick="setThemePref('light')">☀ Claro</button>
+          <button id="btnThemeDark" class="${themePref==='dark'?'active':''}" onclick="setThemePref('dark')">☾ Oscuro</button>
+        </div>
+
+        <div class="field-group-title">Unidades</div>
+        <div class="toggle">
+          <button id="btnMetric" class="${!isImperial?'active':''}" onclick="setUnits(false)">km/h · °C</button>
+          <button id="btnImperial" class="${isImperial?'active':''}" onclick="setUnits(true)">mph · °F</button>
+        </div>
+
+        <div class="field-group-title">Umbrales de evaluación</div>
+        <div class="modal-sub">Valores en km/h, °C, % y Kp (diurno — de noche se aplican automáticamente más estrictos)</div>
+
+        <div class="field-group-title">Viento</div>
+        ${field('windDangerG','Ráfaga → NO APTO')}
+        ${field('windDangerS','Sostenido → NO APTO')}
+        ${field('windWarnG','Ráfaga → Precaución')}
+        ${field('windWarnS','Sostenido → Precaución')}
+
+        <div class="field-group-title">Visibilidad (km)</div>
+        ${field('visDanger','→ NO APTO', 0.5)}
+        ${field('visWarn','→ Precaución', 0.5)}
+
+        <div class="field-group-title">Margen a punto de rocío (°C)</div>
+        ${field('dewDanger','→ NO APTO', 0.1)}
+        ${field('dewWarn','→ Precaución', 0.1)}
+
+        <div class="field-group-title">Temperatura ambiente baja (°C)</div>
+        <div class="modal-sub" style="margin-top:0">Riesgo independiente del margen a rocío: enfriamiento radiativo de superficies (condensación aunque el aire tenga margen) y menor rendimiento/autonomía de batería en frío.</div>
+        ${field('tempDanger','→ NO APTO', 0.5)}
+        ${field('tempWarn','→ Precaución', 0.5)}
+
+        <div class="field-group-title">Índice Kp</div>
+        ${field('kpDanger','→ NO APTO', 0.5)}
+        ${field('kpWarn','→ Precaución', 0.5)}
+
+        <div class="field-group-title">Probabilidad de precipitación (%)</div>
+        ${field('precipDanger','→ NO APTO')}
+        ${field('precipWarn','→ Precaución')}
+
+        <div class="field-group-title">Respaldo de datos</div>
+        <div class="modal-sub">Todo se guarda solo en este dispositivo. Exporta cada cierto tiempo para no perder datos.</div>
+        <div class="modal-actions" style="margin-top:8px">
+          <button class="btn" onclick="exportAllBackup()">↓ Exportar todo</button>
+          <button class="btn" onclick="document.getElementById('backupImportInput').click()">↑ Importar respaldo</button>
+        </div>
+        <input type="file" id="backupImportInput" accept="application/json" style="display:none" onchange="importAllBackup(this.files[0])">
+
+        <div class="modal-sub" style="margin-top:12px">Reporte de un ciclo de trabajo completo por rango de fechas.</div>
+        <div class="modal-actions" style="margin-top:6px">
+          <button class="btn" style="flex:1" onclick="closeSettings(); openCycleExportModal()">Exportar ciclo de turnos</button>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="resetSettingsToDefault()">Restablecer</button>
+          <button class="btn-primary" onclick="saveSettingsFromForm()">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+}
+function closeSettings(){
+  document.getElementById('settingsModal').innerHTML = '';
+}
+
+// ============ EXPORTAR REPORTE COMO IMAGEN ============
+async function exportReport(){
+  const target = document.querySelector('[data-export-target]');
+  if(!target || typeof html2canvas === 'undefined'){ alert('No se pudo preparar la exportación.'); return; }
+  try{
+    const bg = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0A0E13';
+    const canvas = await html2canvas(target, {backgroundColor:bg, scale:2});
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+    link.download = `condicion_vuelo_${stamp}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }catch(e){
+    alert('Error al exportar: '+e.message);
+  }
+}
+
+// ============ FASE LUNAR ============
+function getMoonPhase(date){
+  // algoritmo estándar basado en luna nueva de referencia conocida (6 ene 2000, 18:14 UTC)
+  const synodicMonth = 29.53058867;
+  const knownNewMoon = Date.UTC(2000,0,6,18,14,0);
+  const diffDays = (date.getTime() - knownNewMoon) / 86400000;
+  let phase = (diffDays % synodicMonth) / synodicMonth;
+  if(phase < 0) phase += 1;
+  return phase; // 0 = luna nueva, 0.5 = luna llena
+}
+function moonPhaseInfo(date){
+  const phase = getMoonPhase(date);
+  const illumination = ((1 - Math.cos(2*Math.PI*phase)) / 2) * 100;
+  let name, emoji;
+  if(phase < 0.03 || phase > 0.97){ name='Luna nueva'; emoji='🌑'; }
+  else if(phase < 0.22){ name='Creciente'; emoji='🌒'; }
+  else if(phase < 0.28){ name='Cuarto creciente'; emoji='🌓'; }
+  else if(phase < 0.47){ name='Gibosa creciente'; emoji='🌔'; }
+  else if(phase < 0.53){ name='Luna llena'; emoji='🌕'; }
+  else if(phase < 0.72){ name='Gibosa menguante'; emoji='🌖'; }
+  else if(phase < 0.78){ name='Cuarto menguante'; emoji='🌗'; }
+  else { name='Creciente menguante'; emoji='🌘'; }
+  return {name, emoji, illumination};
+}
+
+// ============ ACORDEONES ============
+const ACCORDION_KEY = 'rpa_accordion_state';
+function loadAccordionState(){
+  try{ return JSON.parse(localStorage.getItem(ACCORDION_KEY)) || {}; }catch(e){ return {}; }
+}
+function toggleAccordion(id){
+  const state = loadAccordionState();
+  state[id] = !state[id];
+  localStorage.setItem(ACCORDION_KEY, JSON.stringify(state));
+  applyAccordionState();
+}
+function applyAccordionState(){
+  const state = loadAccordionState();
+  ['chk','turnoHist','log','norm','aircraft'].forEach(id => {
+    const open = !!state[id];
+    document.getElementById(id+'Header').classList.toggle('open', open);
+    document.getElementById(id+'Body').classList.toggle('open', open);
+  });
+}
+
+// ============ TURNO DE TRABAJO ============
+const TURNO_KEY = 'rpa_turno_activo';
+const TURNO_HISTORY_KEY = 'rpa_turno_historial';
+
+function loadTurno(){
+  try{ return JSON.parse(localStorage.getItem(TURNO_KEY)); }catch(e){ return null; }
+}
+function loadTurnoHistory(){
+  try{ return JSON.parse(localStorage.getItem(TURNO_HISTORY_KEY)) || []; }catch(e){ return []; }
+}
+function saveTurnoHistory(arr){
+  try{ localStorage.setItem(TURNO_HISTORY_KEY, JSON.stringify(arr)); }catch(e){}
+}
+
+function openStartTurnoModal(){
+  const modeNow = isNight ? 'nocturno' : 'diurno';
+  document.getElementById('flightModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+      <div class="modal-panel">
+        <h2>Iniciar turno</h2>
+        <div class="modal-sub">Turno ${modeNow} · ${new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'})}</div>
+
+        <label class="mini-label">Nombre del operador</label>
+        <input type="text" class="field-text" id="turnoOperator" placeholder="Ej: Carl Jung">
+
+        <label class="mini-label">Posición designada</label>
+        <input type="text" class="field-text" id="turnoPosition" placeholder="Ej: Sector 1">
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeFlightModal()">Cancelar</button>
+          <button class="btn-primary" onclick="confirmStartTurno()">▶ Iniciar turno</button>
+        </div>
+      </div>
+    </div>`;
+}
+function confirmStartTurno(){
+  const operator = (document.getElementById('turnoOperator')?.value || '').trim();
+  const position = (document.getElementById('turnoPosition')?.value || '').trim();
+  const turno = {
+    id: 'turno_' + Date.now(),
+    startedAt: new Date().toISOString(),
+    flightCount: 0,
+    operator: operator || 'Sin especificar',
+    position: position || 'Sin especificar',
+    mode: isNight ? 'nocturno' : 'diurno'
+  };
+  localStorage.setItem(TURNO_KEY, JSON.stringify(turno));
+  saveChecklistState({}); // checklist pre-vuelo se reinicia con cada turno nuevo
+
+  // la designación de aeronave se reinicia con cada turno; si solo hay una registrada
+  // se designa sola para no obligar a repetir el mismo toque en cada turno
+  const acList = loadAircraftList();
+  if(!loadActiveAircraftId() && acList.length === 1) saveActiveAircraftId(acList[0].id);
+
+  closeFlightModal();
+  renderTurnoBar();
+  renderFlyBar();
+  renderChecklist();
+  renderAircraftPanel();
+}
+// --- cierre de turno: muestra resumen, permite anotar ciclos de batería (151.005.e — opcional,
+// no bloquea el cierre), archiva los vuelos DENTRO del turno y deja la bitácora limpia para el siguiente ---
+function endTurno(){
+  const turno = loadTurno();
+  if(!turno) return;
+  // un vuelo en curso al cerrar el turno quedaría sin turno al cual pertenecer
+  if(loadActiveFlight()){
+    alert('Hay un vuelo en curso.\n\nFinalízalo o descártalo antes de cerrar el turno.');
+    return;
+  }
+  const flights = loadLog().filter(e => e.turnoId === turno.id);
+  const realizados = flights.filter(e => e.status !== 'cancelado').length;
+  const cancelados = flights.filter(e => e.status === 'cancelado').length;
+  const totalMin = flights.reduce((acc, e) => acc + (e.durationMin || 0), 0);
+  const start = new Date(turno.startedAt);
+  const hrs = ((Date.now() - start.getTime()) / 3600000).toFixed(1);
+  const chkState = loadChecklist();
+  const chkDone = CHECKLIST_ITEMS.filter((_, i) => !!chkState[i]).length;
+
+  document.getElementById('flightModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+      <div class="modal-panel">
+        <h2>Finalizar turno</h2>
+        <div class="modal-sub">Los vuelos quedan guardados en este turno y la bitácora se limpia.</div>
+
+        <div class="risk-summary" style="margin-top:14px">
+          <div class="risk-factors">
+            <div class="risk-factor safe"><span class="rf-dot"></span><span class="rf-label">Duración del turno</span><span class="rf-val">${hrs}h</span></div>
+            <div class="risk-factor safe"><span class="rf-dot"></span><span class="rf-label">Vuelos realizados</span><span class="rf-val">${realizados}</span></div>
+            <div class="risk-factor ${cancelados ? 'warn' : 'safe'}"><span class="rf-dot"></span><span class="rf-label">Vuelos cancelados</span><span class="rf-val">${cancelados}</span></div>
+            <div class="risk-factor ${totalMin ? 'safe' : 'warn'}"><span class="rf-dot"></span><span class="rf-label">Horas de vuelo</span><span class="rf-val">${totalMin ? fmtDuration(totalMin) : 'sin registrar'}</span></div>
+            <div class="risk-factor ${chkDone === CHECKLIST_ITEMS.length ? 'safe' : 'warn'}"><span class="rf-dot"></span><span class="rf-label">Checklist</span><span class="rf-val">${chkDone}/${CHECKLIST_ITEMS.length}</span></div>
+          </div>
+        </div>
+
+        <label class="mini-label" style="margin-top:14px">Ciclos de batería <span class="opt">opc.</span></label>
+        <input type="text" class="field-text" id="turnoBattery" placeholder="Ej: BAT-01 x2, BAT-03 x1">
+        <div class="modal-sub" style="margin-top:4px">DAN 151 · 151.005.e — puedes dejarlo en blanco.</div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeFlightModal()">Cancelar</button>
+          <button class="btn-primary" onclick="confirmEndTurno()">Finalizar y descargar</button>
+        </div>
+      </div>
+    </div>`;
+}
+function confirmEndTurno(){
+  const turno = loadTurno();
+  if(!turno) return;
+  const battery = (document.getElementById('turnoBattery')?.value || '').trim();
+
+  const allEntries = loadLog();
+  const flights = allEntries.filter(e => e.turnoId === turno.id);
+  const chkState = loadChecklist();
+
+  const finished = {
+    ...turno,
+    endedAt: new Date().toISOString(),
+    battery,
+    flights,                       // los vuelos quedan archivados dentro del turno
+    checklistState: chkState,      // y el checklist tal como quedó al cerrar
+    checklistItems: CHECKLIST_ITEMS.slice()
+  };
+  const hist = loadTurnoHistory();
+  hist.unshift(finished);
+  if(hist.length > 150) hist.length = 150;
+  saveTurnoHistory(hist);
+
+  exportTurnoReport(finished);
+
+  // limpieza para el próximo turno: bitácora vacía, checklist en blanco, aeronave sin designar
+  saveLog(allEntries.filter(e => e.turnoId !== turno.id));
+  localStorage.removeItem(TURNO_KEY);
+  try{ localStorage.removeItem('rpa_checklist_turno_' + turno.id); }catch(e){}
+  saveChecklistState({});
+  saveActiveAircraftId(null);
+
+  closeFlightModal();
+  renderTurnoBar();
+  renderFlyBar();
+  renderTurnoHistory();
+  renderChecklist();
+  renderLog();
+  renderAircraftPanel();
+}
+function renderTurnoBar(){
+  const turno = loadTurno();
+  const el = document.getElementById('turnoBar');
+  const activeAircraft = getActiveAircraft();
+  const aircraftLine = activeAircraft
+    ? `<br><span style="color:var(--muted)">Aeronave: <b style="color:var(--text)">${activeAircraft.nombre}</b> · ${severityCategory(computeImpactEnergy(activeAircraft).E)}</span>`
+    : `<br><span style="color:var(--muted)">Aeronave: sin designar</span>`;
+  if(!turno){
+    el.className = 'turno-bar';
+    el.innerHTML = `
+      <div class="turno-row">
+        <span class="turno-info">Sin turno activo${aircraftLine}</span>
+        <button class="btn-primary" style="width:auto;padding:8px 16px" onclick="openStartTurnoModal()">▶ Iniciar turno</button>
+      </div>`;
+  } else {
+    const start = new Date(turno.startedAt);
+    const hrs = ((Date.now()-start.getTime())/3600000).toFixed(1);
+    const operator = turno.operator || 'Sin especificar';
+    const position = turno.position || 'Sin especificar';
+    const mode = turno.mode || 'sin definir';
+    el.className = 'turno-bar active';
+    el.innerHTML = `
+      <div class="turno-row" style="align-items:flex-start">
+        <span class="turno-info">
+          <b>${operator}</b> · ${position}<br>
+          Turno <b>${mode}</b> desde ${start.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})} · ${hrs}h · <b>${turno.flightCount||0}</b> vuelo(s)${aircraftLine}
+        </span>
+        <button class="btn" style="padding:6px 10px;font-size:11px;flex-shrink:0" onclick="endTurno()">Finalizar</button>
+      </div>`;
+  }
+}
+function deleteTurnoHistoryEntry(idx){
+  const hist = loadTurnoHistory();
+  const t = hist[idx];
+  if(!t) return;
+  const n = (t.flights || []).length;
+  if(!confirm(`¿Eliminar este turno del registro?\n\nSe borrarán también los ${n} vuelo(s) archivados en él. Esta acción no se puede deshacer — si aún no descargaste el reporte, hazlo antes.`)) return;
+  hist.splice(idx, 1);
+  saveTurnoHistory(hist);
+  renderTurnoHistory();
+}
+function downloadTurnoHistoryEntry(idx){
+  const hist = loadTurnoHistory();
+  const t = hist[idx];
+  if(!t) return;
+  exportTurnoReport(t);
+}
+function renderTurnoHistory(){
+  const hist = loadTurnoHistory();
+  const countEl = document.getElementById('turnoHistCount');
+  if(countEl) countEl.textContent = hist.length ? `(${hist.length})` : '';
+  const el = document.getElementById('turnoHistEntries');
+  if(!el) return;
+  if(!hist.length){ el.innerHTML = '<div class="log-empty">Sin turnos registrados aún.</div>'; return; }
+  el.innerHTML = hist.map((t,i) => {
+    const start = new Date(t.startedAt);
+    const end = new Date(t.endedAt);
+    const hrs = ((end - start) / 3600000).toFixed(1);
+    const operator = t.operator || 'Sin especificar';
+    const position = t.position || 'Sin especificar';
+    const mode = t.mode || 'sin definir';
+    const flights = t.flights || [];
+    const realizados = flights.filter(f => f.status !== 'cancelado').length;
+    const cancelados = flights.filter(f => f.status === 'cancelado').length;
+    const totalMin = flights.reduce((acc, f) => acc + (f.durationMin || 0), 0);
+    const nFlights = flights.length || t.flightCount || 0;
+    return `<div class="log-entry">
+      <div class="le-top">
+        <span class="le-status ${mode==='nocturno' ? 'safe' : 'warn'}">Turno ${mode} · ${start.toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+        <button class="le-del" onclick="deleteTurnoHistoryEntry(${i})">✕</button>
+      </div>
+      <div class="le-detail">
+        <b>${operator}</b> · ${position}<br>
+        ${start.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})} · ${hrs}h · ${nFlights} vuelo(s)
+        ${flights.length ? `<br>${realizados} realizado(s) · ${cancelados} cancelado(s)${totalMin ? ` · ${fmtDuration(totalMin)} de vuelo` : ''}` : ''}
+        ${t.battery ? `<br><b>Baterías:</b> ${t.battery}` : ''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn-mini" onclick="openSaveFlightModal({retroTurnoIdx:${i}})">+ Agregar vuelo</button>
+        <button class="btn-mini" onclick="downloadTurnoHistoryEntry(${i})">↓ Descargar</button>
+        <button class="btn-mini" onclick="deleteTurnoHistoryEntry(${i})">× Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ AERONAVE(S) — clasificación de severidad S1-S5 según Apéndice G, DAN 151 Ed.4 ============
+// energía de impacto E = ½·m·v² ; multirrotor: v = velocidad terminal de caída = √(2·w/(ρ·Cd·A));
+// ala fija: v = velocidad máxima/crucero declarada. Umbrales de la matriz oficial: S1≤15J, S2≤50J, S3≤80J, S4≤250J, S5>250J.
+const AIRCRAFT_KEY = 'rpa_aircraft_list';
+const ACTIVE_AIRCRAFT_KEY = 'rpa_aircraft_active';
+let pendingAircraftTipo = 'multirrotor';
+let editingAircraftId = null;
+
+function loadAircraftList(){
+  try{ return JSON.parse(localStorage.getItem(AIRCRAFT_KEY)) || []; }catch(e){ return []; }
+}
+function saveAircraftList(list){
+  try{ localStorage.setItem(AIRCRAFT_KEY, JSON.stringify(list)); }catch(e){}
+}
+function loadActiveAircraftId(){
+  try{ return localStorage.getItem(ACTIVE_AIRCRAFT_KEY) || null; }catch(e){ return null; }
+}
+function saveActiveAircraftId(id){
+  try{ id ? localStorage.setItem(ACTIVE_AIRCRAFT_KEY, id) : localStorage.removeItem(ACTIVE_AIRCRAFT_KEY); }catch(e){}
+}
+function getActiveAircraft(){
+  const id = loadActiveAircraftId();
+  if(!id) return null;
+  return loadAircraftList().find(a => a.id===id) || null;
+}
+function computeImpactEnergy(a){
+  const g = 9.81, rho = 1.225; // densidad del aire ISA a nivel del mar
+  let v;
+  if(a.tipo === 'multirrotor'){
+    const w = a.peso * g; // peso en Newtons
+    const cd = a.cd || 0.7; // valor por defecto del Apéndice G ante ausencia de dato del fabricante
+    v = Math.sqrt((2*w) / (rho * cd * a.area));
+  } else {
+    v = (a.vmax || 0) / 3.6; // velocidad máx./crucero declarada, km/h → m/s
+  }
+  const E = 0.5 * a.peso * v * v;
+  return {v, E};
+}
+function severityCategory(E){
+  if(E <= 15) return 'S1';
+  if(E <= 50) return 'S2';
+  if(E <= 80) return 'S3';
+  if(E <= 250) return 'S4';
+  return 'S5';
+}
+function severityTier(cat){
+  return (cat==='S1'||cat==='S2') ? 'safe' : cat==='S3' ? 'warn' : 'danger';
+}
+
+// --- catálogo de modelos DJI: peso de despegue (kg) y diagonal entre motores (mm) del fabricante ---
+// el área proyectada se estima como el círculo circunscrito al diagonal (aproximación conservadora,
+// editable): área = π·(diagonal/2)². Ajusta el valor si tienes un dato más preciso para tu Manual de Operaciones.
+// est:true → DJI no publica "diagonal wheelbase" para ese modelo; el valor se derivó de las dimensiones
+//            desplegadas declaradas. Verifícalo contra la ficha del fabricante antes de usarlo en documentación oficial.
+const DJI_PRESETS = [
+  // ---- Matrice · plataformas enterprise ----
+  {g:'Matrice · enterprise', nombre:'DJI Matrice 400',                    peso:9.740, diagonal:1070},
+  {g:'Matrice · enterprise', nombre:'DJI Matrice 350 RTK (2 bat. TB65)',  peso:6.470, diagonal:895},
+  {g:'Matrice · enterprise', nombre:'DJI Matrice 300 RTK (2 bat. TB60)',  peso:6.300, diagonal:895},
+  {g:'Matrice · enterprise', nombre:'DJI Matrice 30 / 30T',               peso:3.770, diagonal:668},
+  {g:'Matrice · enterprise', nombre:'DJI Matrice 4D / 4TD (Dock 3)',      peso:1.850, diagonal:498.5},
+  {g:'Matrice · enterprise', nombre:'DJI Matrice 4T / 4E',                peso:1.219, diagonal:438.8},
+
+  // ---- Mavic Enterprise ----
+  {g:'Mavic Enterprise',     nombre:'DJI Mavic 3T (térmica)',             peso:0.920, diagonal:380.1},
+  {g:'Mavic Enterprise',     nombre:'DJI Mavic 3TA (térmica avanzada)',   peso:0.920, diagonal:380.1},
+  {g:'Mavic Enterprise',     nombre:'DJI Mavic 3E',                       peso:0.915, diagonal:380.1},
+  {g:'Mavic Enterprise',     nombre:'DJI Mavic 2 Enterprise Dual',        peso:0.899, diagonal:354},
+
+  // ---- Mavic · Air · Mini · Phantom · Inspire ----
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mavic 4 Pro',                    peso:1.063, diagonal:433, est:true},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mavic 3 Pro',                    peso:0.958, diagonal:380.1},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mavic 3 / 3 Classic',            peso:0.895, diagonal:380.1},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mavic 2 Pro / Zoom',             peso:0.907, diagonal:354},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Air 3S',                         peso:0.724, diagonal:380.7, est:true},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Air 3',                          peso:0.720, diagonal:380.7},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Air 2S',                         peso:0.595, diagonal:302},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mini 5 Pro',                     peso:0.250, diagonal:247, est:true},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mini 4 Pro',                     peso:0.249, diagonal:245},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Mini 3 Pro',                     peso:0.249, diagonal:247},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Flip',                           peso:0.249, diagonal:300, est:true},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Phantom 4 Pro V2',               peso:1.375, diagonal:350},
+  {g:'Mavic · Air · Mini',   nombre:'DJI Inspire 2',                      peso:3.440, diagonal:605},
+
+  // ---- FPV · compactos ----
+  {g:'FPV · compactos',      nombre:'DJI FPV',                            peso:0.795, diagonal:255},
+  {g:'FPV · compactos',      nombre:'DJI Avata 2',                        peso:0.377, diagonal:212, est:true},
+  {g:'FPV · compactos',      nombre:'DJI Neo',                            peso:0.135, diagonal:157, est:true},
+
+  // ---- Agras · agrícolas (peso en vacío con batería; cargados suben bastante por sobre S5) ----
+  {g:'Agras · agrícolas',    nombre:'DJI Agras T50 (vacío, c/batería)',   peso:52.0,  diagonal:2200},
+  {g:'Agras · agrícolas',    nombre:'DJI Agras T25 (vacío, c/batería)',   peso:32.0,  diagonal:1925},
+];
+function applyAircraftPreset(idx){
+  const hint = document.getElementById('acPresetHint');
+  if(idx === ''){
+    if(hint) hint.textContent = 'Área estimada desde el diagonal DJI. Todos los campos son editables.';
+    return;
+  }
+  const p = DJI_PRESETS[parseInt(idx)];
+  if(!p) return;
+  const area = Math.PI * Math.pow((p.diagonal/1000)/2, 2);
+  setAircraftTipo('multirrotor');
+  document.getElementById('acNombre').value = p.nombre;
+  document.getElementById('acPeso').value = p.peso;
+  document.getElementById('acCd').value = 0.7;
+  document.getElementById('acArea').value = area.toFixed(3);
+  if(hint){
+    hint.innerHTML = p.est
+      ? `<span style="color:var(--amber)">Diagonal derivada (${p.diagonal} mm):</span> DJI no publica diagonal entre motores para este modelo. Verifica el dato antes de usarlo en tu Manual de Operaciones.`
+      : `Diagonal de fábrica: ${p.diagonal} mm · peso ${p.peso} kg. Todos los campos son editables.`;
+  }
+}
+function openAircraftModal(id){
+  const list = loadAircraftList();
+  const existing = id ? list.find(a => a.id===id) : null;
+  editingAircraftId = id || null;
+  pendingAircraftTipo = existing?.tipo || 'multirrotor';
+  document.getElementById('flightModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+      <div class="modal-panel">
+        <h2>${existing ? 'Editar aeronave' : 'Agregar aeronave'}</h2>
+        <div class="modal-sub">Severidad de impacto · Apéndice G, DAN 151 Ed.4</div>
+
+        ${existing ? '' : `
+        <label class="mini-label">Modelo predefinido <span class="opt">opc.</span></label>
+        <select class="field-text" id="acPreset" onchange="applyAircraftPreset(this.value)">
+          <option value="">— Personalizado / ingreso manual —</option>
+          ${[...new Set(DJI_PRESETS.map(p => p.g))].map(grupo => `
+          <optgroup label="${grupo}">
+            ${DJI_PRESETS.map((p,i) => p.g===grupo ? `<option value="${i}">${p.nombre}${p.est?' *':''}</option>` : '').join('')}
+          </optgroup>`).join('')}
+        </select>
+        <div class="modal-sub" style="margin-top:4px" id="acPresetHint">Área estimada desde el diagonal DJI. Todos los campos son editables.</div>
+        `}
+
+        <label class="mini-label">Nombre / modelo</label>
+        <input type="text" class="field-text" id="acNombre" placeholder="Ej: DJI Mavic 3" value="${existing?.nombre||''}">
+
+        <div class="radio-row" style="margin-top:10px">
+          <div class="radio-opt ${pendingAircraftTipo==='multirrotor'?'selected':''}" id="optMultirrotor" onclick="setAircraftTipo('multirrotor')">Multirrotor</div>
+          <div class="radio-opt ${pendingAircraftTipo==='ala_fija'?'selected':''}" id="optAlaFija" onclick="setAircraftTipo('ala_fija')">Ala fija</div>
+        </div>
+
+        <label class="mini-label">Peso máximo de despegue (kg)</label>
+        <input type="number" step="0.01" class="field-text" id="acPeso" value="${existing?.peso ?? ''}" placeholder="Ej: 0.90">
+
+        <div id="acMultirrotorFields" style="display:${pendingAircraftTipo==='multirrotor'?'block':'none'}">
+          <label class="mini-label">Coef. de arrastre (Cd) <span class="opt">0.7 por defecto</span></label>
+          <input type="number" step="0.01" class="field-text" id="acCd" value="${existing?.cd ?? 0.7}">
+          <label class="mini-label">Área proyectada (m²)</label>
+          <input type="number" step="0.01" class="field-text" id="acArea" value="${existing?.area ?? ''}" placeholder="Ej: 0.06">
+        </div>
+
+        <div id="acAlaFijaFields" style="display:${pendingAircraftTipo==='ala_fija'?'block':'none'}">
+          <label class="mini-label">Velocidad máx./crucero (km/h)</label>
+          <input type="number" step="1" class="field-text" id="acVmax" value="${existing?.vmax ?? ''}" placeholder="Ej: 70">
+        </div>
+
+        <label class="mini-label" style="margin-top:14px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="acParacaidas" ${existing?.paracaidas?'checked':''} style="width:16px;height:16px;accent-color:var(--amber)"> Paracaídas de emergencia certificado
+        </label>
+        <label class="mini-label" style="margin-top:6px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="acLimitador" ${existing?.limitadorVel?'checked':''} style="width:16px;height:16px;accent-color:var(--amber)"> Limitador de velocidad activo
+        </label>
+        <div class="modal-sub" style="margin-top:8px">Se registran como referencia; la app no aplica un factor automático.</div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeFlightModal()">Cancelar</button>
+          <button class="btn-primary" onclick="confirmSaveAircraft()">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+}
+function setAircraftTipo(tipo){
+  pendingAircraftTipo = tipo;
+  document.getElementById('optMultirrotor').classList.toggle('selected', tipo==='multirrotor');
+  document.getElementById('optAlaFija').classList.toggle('selected', tipo==='ala_fija');
+  document.getElementById('acMultirrotorFields').style.display = tipo==='multirrotor' ? 'block' : 'none';
+  document.getElementById('acAlaFijaFields').style.display = tipo==='ala_fija' ? 'block' : 'none';
+}
+function confirmSaveAircraft(){
+  const nombre = (document.getElementById('acNombre')?.value || '').trim() || 'Aeronave sin nombre';
+  const peso = parseFloat(document.getElementById('acPeso')?.value);
+  if(isNaN(peso) || peso<=0){ alert('Ingresa un peso máximo de despegue válido (kg).'); return; }
+
+  const aircraft = { id: editingAircraftId || ('ac_'+Date.now()), nombre, tipo: pendingAircraftTipo, peso };
+  if(pendingAircraftTipo === 'multirrotor'){
+    const cd = parseFloat(document.getElementById('acCd')?.value);
+    const area = parseFloat(document.getElementById('acArea')?.value);
+    if(isNaN(area) || area<=0){ alert('Ingresa el área proyectada (m²) — se usa para estimar la velocidad de caída.'); return; }
+    aircraft.cd = isNaN(cd) ? 0.7 : cd;
+    aircraft.area = area;
+  } else {
+    const vmax = parseFloat(document.getElementById('acVmax')?.value);
+    if(isNaN(vmax) || vmax<=0){ alert('Ingresa la velocidad máxima/crucero (km/h).'); return; }
+    aircraft.vmax = vmax;
+  }
+  aircraft.paracaidas = !!document.getElementById('acParacaidas')?.checked;
+  aircraft.limitadorVel = !!document.getElementById('acLimitador')?.checked;
+
+  const list = loadAircraftList();
+  const idx = list.findIndex(a => a.id===aircraft.id);
+  if(idx>=0) list[idx] = aircraft; else list.push(aircraft);
+  saveAircraftList(list);
+
+  if(!loadActiveAircraftId() && list.length===1) saveActiveAircraftId(aircraft.id); // la primera registrada queda designada automáticamente
+
+  closeFlightModal();
+  renderAircraftPanel();
+  renderTurnoBar();
+}
+function setActiveAircraft(id){
+  saveActiveAircraftId(id);
+  renderAircraftPanel();
+  renderTurnoBar();
+}
+function deleteAircraft(id){
+  if(!confirm('¿Eliminar esta aeronave del registro?')) return;
+  const list = loadAircraftList().filter(a => a.id!==id);
+  saveAircraftList(list);
+  if(loadActiveAircraftId()===id) saveActiveAircraftId(list.length ? list[0].id : null);
+  renderAircraftPanel();
+  renderTurnoBar();
+}
+function renderAircraftPanel(){
+  const list = loadAircraftList();
+  const activeId = loadActiveAircraftId();
+  const countEl = document.getElementById('aircraftCount');
+  if(countEl) countEl.textContent = list.length ? `(${list.length})` : '';
+  const el = document.getElementById('aircraftEntries');
+  if(!el) return;
+  if(!list.length){
+    el.innerHTML = '<div class="log-empty">Sin aeronaves registradas. Agrega la tuya para calcular su categoría de severidad (Apéndice G, DAN 151).</div>';
+    return;
+  }
+  el.innerHTML = list.map(a => {
+    const {v, E} = computeImpactEnergy(a);
+    const cat = severityCategory(E);
+    const tier = severityTier(cat);
+    const isActive = a.id === activeId;
+    return `<div class="log-entry" style="${isActive ? 'border-color:var(--amber)' : ''}">
+      <div class="le-top">
+        <span class="le-status ${tier}">${cat} · ${E.toFixed(0)} J</span>
+        ${isActive
+          ? '<span class="rf-tag" style="border-color:var(--amber);color:var(--amber)">Designada</span>'
+          : `<button class="btn-mini" onclick="setActiveAircraft('${a.id}')">Usar en turno</button>`}
+      </div>
+      <div class="le-detail">
+        <b>${a.nombre}</b> · ${a.tipo==='multirrotor'?'Multirrotor':'Ala fija'} · ${a.peso} kg<br>
+        Velocidad de impacto estimada: ${v.toFixed(1)} m/s (${(v*3.6).toFixed(0)} km/h)${(a.paracaidas||a.limitadorVel) ? ' · mitigación declarada' : ''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn-mini" onclick="openAircraftModal('${a.id}')">Editar</button>
+        <button class="btn-mini" onclick="deleteAircraft('${a.id}')">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ CHECKLIST PRE-VUELO ============
+const CHECKLIST_ITEMS = [
+  'Hélices sin daños y bien colocadas',
+  'Batería del dron cargada',
+  'Batería del control remoto cargada',
+  'Tarjeta SD con espacio suficiente',
+  'Firmware del dron y app actualizado',
+  'Calibración de brújula/IMU realizada',
+  'Sensores de obstáculos limpios y sin obstrucción',
+  'GPS con señal estable (≥ 6 satélites)',
+  'Área de despegue despejada de obstáculos',
+  'Plan de vuelo y RTH configurados'
+];
+const CHECKLIST_KEY = 'rpa_checklist_' + new Date().toISOString().slice(0,10); // reserva sin turno activo: por día calendario
+function getChecklistKey(){
+  const turno = loadTurno();
+  return turno?.id ? ('rpa_checklist_turno_' + turno.id) : CHECKLIST_KEY;
+}
+function loadChecklist(){
+  try{ return JSON.parse(localStorage.getItem(getChecklistKey())) || {}; }catch(e){ return {}; }
+}
+function saveChecklistState(state){
+  try{ localStorage.setItem(getChecklistKey(), JSON.stringify(state)); }catch(e){}
+}
+function renderChecklist(){
+  const state = loadChecklist();
+  const html = CHECKLIST_ITEMS.map((item, i) => {
+    const checked = !!state[i];
+    return `<div class="checklist-item ${checked?'checked':''}">
+      <input type="checkbox" id="chk${i}" ${checked?'checked':''} onchange="toggleChecklistItem(${i})">
+      <label for="chk${i}">${item}</label>
+    </div>`;
+  }).join('');
+  document.getElementById('checklistItems').innerHTML = html;
+  updateChecklistProgress(state);
+}
+function updateChecklistProgress(state){
+  const done = Object.values(state).filter(Boolean).length;
+  const total = CHECKLIST_ITEMS.length;
+  document.getElementById('chkCount').textContent = `${done}/${total}`;
+  document.getElementById('chkBar').style.width = (done/total*100)+'%';
+}
+function toggleChecklistItem(i){
+  const state = loadChecklist();
+  state[i] = !state[i];
+  saveChecklistState(state);
+  renderChecklist();
+}
+function resetChecklist(){
+  saveChecklistState({});
+  renderChecklist();
+}
+renderChecklist();
+
+// ============ VUELO EN CURSO — cronómetro de operación ============
+// Mide TIEMPO DE OPERACIÓN: desde que el piloto queda listo para despegar hasta que
+// termina la maniobra. No es el tiempo de vuelo del fabricante (ese se anota aparte,
+// desde el registro del DJI, si se quiere el dato exacto).
+// El snapshot meteorológico se congela AL INICIAR, no al guardar: las condiciones que
+// importan son las del momento en que se voló.
+const FLIGHT_ACTIVE_KEY = 'rpa_vuelo_en_curso';
+let flyTicker = null;
+
+function loadActiveFlight(){
+  try{ return JSON.parse(localStorage.getItem(FLIGHT_ACTIVE_KEY)); }catch(e){ return null; }
+}
+function saveActiveFlight(f){
+  try{ localStorage.setItem(FLIGHT_ACTIVE_KEY, JSON.stringify(f)); }catch(e){}
+}
+function clearActiveFlight(){
+  try{ localStorage.removeItem(FLIGHT_ACTIVE_KEY); }catch(e){}
+}
+function hhmmFrom(date){
+  return `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+}
+function elapsedStr(ms){
+  const s = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return h ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+           : `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+// Un toque y a volar. No pide nada: aeronave, sector y notas se completan al aterrizar.
+function startQuickFlight(emergency){
+  const turno = loadTurno();
+  if(!turno){ alert('Inicia un turno antes de registrar vuelos.'); return; }
+  if(loadActiveFlight()) return;
+  const ac = getActiveAircraft();
+  saveActiveFlight({
+    startedAt: new Date().toISOString(),
+    turnoId: turno.id,
+    emergency: !!emergency,
+    // si aún no cargaron los datos, el vuelo se registra igual y queda sin snapshot
+    snapshot: window.lastRenderSnapshot ? {...window.lastRenderSnapshot} : null,
+    aircraftName: ac ? ac.nombre : null,
+    aircraftCategory: ac ? severityCategory(computeImpactEnergy(ac).E) : null
+  });
+  renderFlyBar();
+}
+
+function cancelActiveFlight(){
+  if(!confirm('¿Descartar este vuelo en curso?\n\nNo quedará registrado en la bitácora.')) return;
+  clearActiveFlight();
+  renderFlyBar();
+}
+
+// Al aterrizar se abre el modal ya rellenado con las horas reales y el snapshot del despegue.
+function finishQuickFlight(){
+  const active = loadActiveFlight();
+  if(!active) return;
+  const start = new Date(active.startedAt);
+  const end = new Date();
+  openSaveFlightModal({
+    takeoff: hhmmFrom(start),
+    landing: hhmmFrom(end),
+    snapshot: active.snapshot,
+    emergency: active.emergency,
+    aircraftName: active.aircraftName,
+    aircraftCategory: active.aircraftCategory,
+    fromTimer: true
+  });
+}
+
+// Botón fijo de la topbar: en emergencia no se scrollea. Un toque despega, otro aterriza.
+function topEmergencyAction(){
+  const active = loadActiveFlight();
+  if(active) finishQuickFlight();
+  else startQuickFlight(true);
+}
+function renderTopEmgBtn(){
+  const btn = document.getElementById('topEmgBtn');
+  if(!btn) return;
+  const turno = loadTurno();
+  if(!turno){ btn.style.display = 'none'; return; }
+  const active = loadActiveFlight();
+  btn.style.display = '';
+  if(active){
+    btn.classList.add('live');
+    btn.textContent = '■';
+    btn.title = 'Finalizar vuelo en curso';
+  } else {
+    btn.classList.remove('live');
+    btn.textContent = 'EMG';
+    btn.title = 'Iniciar vuelo de emergencia';
+  }
+}
+
+function renderFlyBar(){
+  const el = document.getElementById('flyBar');
+  if(!el) return;
+  const turno = loadTurno();
+  const active = loadActiveFlight();
+  renderTopEmgBtn();
+
+  if(flyTicker){ clearInterval(flyTicker); flyTicker = null; }
+
+  if(!turno){ el.innerHTML = ''; return; }
+
+  if(!active){
+    el.className = 'fly-bar';
+    el.innerHTML = `
+      <button class="fly-btn go" onclick="startQuickFlight(false)">▶ Iniciar vuelo</button>
+      <button class="fly-btn ghost" style="margin-top:8px" onclick="openSaveFlightModal({manual:true})">✎ Registrar a mano</button>
+      <div class="fly-meta" style="margin-top:8px">El cronómetro mide tiempo de operación y congela las condiciones al despegar. Para emergencias, el botón <b style="color:var(--danger)">EMG</b> de arriba.</div>`;
+    return;
+  }
+
+  // vuelo en curso: si la app se cerró y volvió a abrir, el reloj sigue corriendo
+  // porque la hora de inicio está guardada, no el contador
+  const start = new Date(active.startedAt);
+  const tick = () => {
+    const clockEl = document.getElementById('flyClock');
+    if(clockEl) clockEl.textContent = elapsedStr(Date.now() - start.getTime());
+  };
+  el.className = 'fly-bar running' + (active.emergency ? ' emg' : '');
+  el.innerHTML = `
+    ${active.emergency ? '<div style="text-align:center;margin-bottom:8px"><span class="fly-tag">Vuelo de emergencia</span></div>' : ''}
+    <div class="fly-clock" id="flyClock">${elapsedStr(Date.now()-start.getTime())}</div>
+    <div class="fly-meta">Despegue ${hhmmFrom(start)}${active.aircraftName ? ' · '+active.aircraftName : ''}${active.snapshot ? '' : ' · sin datos meteorológicos'}</div>
+    <button class="fly-btn stop" style="margin-top:12px" onclick="finishQuickFlight()">■ Finalizar vuelo</button>
+    <button class="fly-btn ghost" style="margin-top:8px" onclick="cancelActiveFlight()">Descartar sin registrar</button>`;
+  flyTicker = setInterval(tick, 1000);
+}
+
+// ============ BITÁCORA DE VUELOS ============
+const LOG_KEY = 'rpa_flight_log';
+function loadLog(){
+  try{ return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){ return []; }
+}
+function saveLog(entries){
+  try{ localStorage.setItem(LOG_KEY, JSON.stringify(entries)); }catch(e){}
+}
+
+let pendingFlightStatus = 'realizado';
+let pendingFlightEmergency = false;
+let vnocExpanded = false;
+let riskExpanded = false;
+function toggleVnocInfo(){
+  vnocExpanded = !vnocExpanded;
+  if(lastWeather) render(lastWeather, lastKp);
+}
+function toggleRiskInfo(){
+  riskExpanded = !riskExpanded;
+  if(lastWeather) render(lastWeather, lastKp);
+}
+// Un mismo modal cubre los tres caminos de registro:
+//  - fromTimer: viene del cronómetro, horas y condiciones ya capturadas
+//  - manual: se registra a mano dentro del turno activo, toma las condiciones actuales
+//  - retroTurnoIdx: se agrega a un turno YA CERRADO del historial (vuelo que no alcanzó
+//    a registrarse en el momento). Sin datos meteorológicos y marcado como retroactivo.
+function openSaveFlightModal(opts){
+  opts = opts || {};
+  const isRetro = Number.isInteger(opts.retroTurnoIdx);
+  const snapshot = opts.snapshot || (isRetro ? null : window.lastRenderSnapshot);
+
+  if(!isRetro && !snapshot && !opts.fromTimer){
+    if(!confirm('Aún no hay datos meteorológicos cargados.\n\n¿Registrar el vuelo igual, sin condiciones?')) return;
+  }
+
+  let nextNum, subtitle;
+  if(isRetro){
+    const t = loadTurnoHistory()[opts.retroTurnoIdx];
+    if(!t) return;
+    nextNum = (t.flights || []).length + 1;
+    subtitle = `Turno cerrado del ${new Date(t.startedAt).toLocaleDateString('es-CL')} · ${t.operator || ''}`;
+  } else {
+    const turno = loadTurno();
+    nextNum = turno ? turno.flightCount + 1 : (loadLog().length + 1);
+    subtitle = turno ? 'Dentro del turno activo' : 'Sin turno activo';
+  }
+
+  pendingFlightStatus = 'realizado';
+  pendingFlightEmergency = !!opts.emergency;
+
+  const chkState = loadChecklist();
+  const chkDone = CHECKLIST_ITEMS.filter((_, i) => !!chkState[i]).length;
+  const chkWarn = (!isRetro && chkDone < CHECKLIST_ITEMS.length)
+    ? `<div class="vnoc" style="margin-top:0;margin-bottom:12px">Checklist incompleto (${chkDone}/${CHECKLIST_ITEMS.length}) — queda constancia en la bitácora.</div>`
+    : '';
+
+  const now = new Date();
+  const takeoffVal = opts.takeoff || hhmmFrom(now);
+  const landingVal = opts.landing || hhmmFrom(now);
+
+  const retroWarn = isRetro
+    ? `<div class="vnoc" style="margin-top:0;margin-bottom:12px">Registro retroactivo: quedará marcado como tal en el reporte y no llevará condiciones meteorológicas del momento.</div>`
+    : '';
+
+  const timerNote = opts.fromTimer
+    ? `<div class="modal-sub" style="margin-top:4px">Horas tomadas del cronómetro. Ajústalas si el despegue real fue otro.</div>`
+    : '';
+
+  document.getElementById('flightModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+      <div class="modal-panel">
+        <h2>${isRetro ? 'Agregar vuelo a turno cerrado' : `Registrar vuelo N.º ${nextNum}`}</h2>
+        <div class="modal-sub">${subtitle}</div>
+
+        ${retroWarn}
+        ${chkWarn}
+
+        <div class="radio-row">
+          <div class="radio-opt selected" id="optRealizado" onclick="setFlightStatus('realizado')">Realizado</div>
+          <div class="radio-opt" id="optCancelado" onclick="setFlightStatus('cancelado')">Cancelado</div>
+        </div>
+
+        <div id="reasonField" style="display:none">
+          <label class="mini-label">Motivo de cancelación</label>
+          <input type="text" class="field-text" id="flightReason" placeholder="Ej: ráfagas sobre el límite">
+        </div>
+
+        <div class="radio-row" style="margin-top:4px">
+          <div class="radio-opt ${pendingFlightEmergency?'':'selected'}" id="optNormal" onclick="setFlightEmergency(false)">Vuelo normal</div>
+          <div class="radio-opt ${pendingFlightEmergency?'selected':''}" id="optEmergencia" onclick="setFlightEmergency(true)">Emergencia</div>
+        </div>
+        <div class="modal-sub" style="margin-top:-4px;margin-bottom:6px">En emergencia se vuela con el criterio del piloto; la condición evaluada queda registrada igual.</div>
+
+        <div id="timeFields">
+          <label class="mini-label">Horas de operación</label>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1">
+              <input type="time" class="field-text" id="flightTakeoff" value="${takeoffVal}">
+              <div class="micro-label">Despegue</div>
+            </div>
+            <div style="flex:1">
+              <input type="time" class="field-text" id="flightLanding" value="${landingVal}">
+              <div class="micro-label">Aterrizaje</div>
+            </div>
+          </div>
+          ${timerNote}
+        </div>
+
+        <label class="mini-label">Tiempo de vuelo real <span class="opt">opc.</span></label>
+        <input type="number" class="field-text" id="flightRealMin" min="0" step="1" placeholder="minutos según registro del DJI">
+        <div class="modal-sub" style="margin-top:4px">Si lo dejas en blanco se usa el tiempo de operación.</div>
+
+        <label class="mini-label">Sector / tramo <span class="opt">opc.</span></label>
+        <input type="text" class="field-text" id="flightSector" placeholder="Ej: E184 a E176">
+
+        <label class="mini-label">Notas <span class="opt">opc.</span></label>
+        <textarea class="field-text" id="flightNotes" rows="3" placeholder="Observaciones, hallazgos, novedades"></textarea>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeFlightModal()">Cancelar</button>
+          <button class="btn-primary" onclick="${isRetro ? `confirmRetroFlight(${opts.retroTurnoIdx}, ${nextNum})` : `confirmSaveFlight(${nextNum}, ${!!opts.fromTimer})`}">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+
+  if(!isRetro && snapshot) window.pendingFlightSnapshot = snapshot;
+  else window.pendingFlightSnapshot = opts.snapshot || null;
+  window.pendingFlightAircraft = opts.aircraftName
+    ? {aircraftName: opts.aircraftName, aircraftCategory: opts.aircraftCategory}
+    : null;
+}
+function setFlightEmergency(v){
+  pendingFlightEmergency = v;
+  document.getElementById('optNormal')?.classList.toggle('selected', !v);
+  document.getElementById('optEmergencia')?.classList.toggle('selected', v);
+}
+// --- edición de un vuelo ya guardado: solo campos que dependen del piloto, nunca los datos
+// meteorológicos capturados en el momento del vuelo (esos son evidencia, no deben reescribirse) ---
+function openEditFlightModal(idx){
+  const entries = loadLog();
+  const e = entries[idx];
+  if(!e) return;
+  pendingFlightStatus = e.status || 'realizado';
+  pendingFlightEmergency = !!e.emergency;
+  document.getElementById('flightModal').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+      <div class="modal-panel">
+        <h2>Editar vuelo N.º ${e.flightNumber||'—'}</h2>
+        <div class="modal-sub">Las condiciones meteorológicas no se modifican.</div>
+
+        <div class="radio-row">
+          <div class="radio-opt ${pendingFlightStatus==='realizado'?'selected':''}" id="optRealizado" onclick="setFlightStatus('realizado')">Realizado</div>
+          <div class="radio-opt ${pendingFlightStatus==='cancelado'?'selected':''}" id="optCancelado" onclick="setFlightStatus('cancelado')">Cancelado</div>
+        </div>
+
+        <div id="reasonField" style="display:${pendingFlightStatus==='cancelado'?'block':'none'}">
+          <label class="mini-label">Motivo de cancelación</label>
+          <input type="text" class="field-text" id="flightReason" value="${(e.reason||'').replace(/"/g,'&quot;')}">
+        </div>
+
+        <div class="radio-row" style="margin-top:4px">
+          <div class="radio-opt ${pendingFlightEmergency?'':'selected'}" id="optNormal" onclick="setFlightEmergency(false)">Vuelo normal</div>
+          <div class="radio-opt ${pendingFlightEmergency?'selected':''}" id="optEmergencia" onclick="setFlightEmergency(true)">Emergencia</div>
+        </div>
+
+        <div id="timeFields">
+          <label class="mini-label">Horas de operación</label>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1">
+              <input type="time" class="field-text" id="flightTakeoff" value="${e.takeoff||''}">
+              <div class="micro-label">Despegue</div>
+            </div>
+            <div style="flex:1">
+              <input type="time" class="field-text" id="flightLanding" value="${e.landing||''}">
+              <div class="micro-label">Aterrizaje</div>
+            </div>
+          </div>
+        </div>
+
+        <label class="mini-label">Tiempo de vuelo real <span class="opt">opc.</span></label>
+        <input type="number" class="field-text" id="flightRealMin" min="0" step="1" value="${e.realFlightMin ?? ''}" placeholder="minutos según registro del DJI">
+
+        <label class="mini-label">Sector / tramo</label>
+        <input type="text" class="field-text" id="flightSector" value="${(e.sector||'').replace(/"/g,'&quot;')}">
+
+        <label class="mini-label">Notas</label>
+        <textarea class="field-text" id="flightNotes" rows="3">${e.notes||''}</textarea>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeFlightModal()">Cancelar</button>
+          <button class="btn-primary" onclick="confirmEditFlight(${idx})">Guardar cambios</button>
+        </div>
+      </div>
+    </div>`;
+}
+function confirmEditFlight(idx){
+  const entries = loadLog();
+  if(!entries[idx]) return;
+  const realRaw = document.getElementById('flightRealMin')?.value;
+  entries[idx] = {
+    ...entries[idx],
+    status: pendingFlightStatus,
+    emergency: !!pendingFlightEmergency,
+    reason: pendingFlightStatus==='cancelado' ? (document.getElementById('flightReason')?.value || '').trim() : '',
+    takeoff: document.getElementById('flightTakeoff')?.value || '',
+    landing: document.getElementById('flightLanding')?.value || '',
+    realFlightMin: realRaw !== '' && realRaw != null && !isNaN(realRaw) ? Math.max(0, parseInt(realRaw)) : null,
+    sector: (document.getElementById('flightSector')?.value || '').trim(),
+    notes: (document.getElementById('flightNotes')?.value || '').trim(),
+    editedAt: new Date().toISOString()
+  };
+  entries[idx].durationMin = flightDurationMin(entries[idx].takeoff, entries[idx].landing);
+  saveLog(entries);
+  closeFlightModal();
+  renderLog();
+}
+// duración en minutos; si el aterrizaje es "menor" que el despegue se asume cruce de medianoche (turno nocturno)
+function flightDurationMin(takeoff, landing){
+  if(!takeoff || !landing) return null;
+  const [h1,m1] = takeoff.split(':').map(Number);
+  const [h2,m2] = landing.split(':').map(Number);
+  if([h1,m1,h2,m2].some(isNaN)) return null;
+  let diff = (h2*60+m2) - (h1*60+m1);
+  if(diff < 0) diff += 1440;
+  return diff;
+}
+function fmtDuration(min){
+  if(min===null || min===undefined) return null;
+  const h = Math.floor(min/60), m = min%60;
+  return h ? `${h}h ${m}min` : `${m}min`;
+}
+function setFlightStatus(status){
+  pendingFlightStatus = status;
+  document.getElementById('optRealizado').classList.toggle('selected', status==='realizado');
+  document.getElementById('optCancelado').classList.toggle('selected', status==='cancelado');
+  document.getElementById('reasonField').style.display = status==='cancelado' ? 'block' : 'none';
+}
+function closeFlightModal(){
+  document.getElementById('flightModal').innerHTML = '';
+}
+function confirmSaveFlight(flightNumber, fromTimer){
+  const reason = (document.getElementById('flightReason')?.value || '').trim();
+  const notes = (document.getElementById('flightNotes')?.value || '').trim();
+  // la aeronave designada al despegar manda sobre la designada ahora
+  const aircraftInfo = window.pendingFlightAircraft || (() => {
+    const a = getActiveAircraft();
+    return a ? {aircraftName: a.nombre, aircraftCategory: severityCategory(computeImpactEnergy(a).E)} : {};
+  })();
+  const turno = loadTurno();
+  const takeoff = document.getElementById('flightTakeoff')?.value || '';
+  const landing = document.getElementById('flightLanding')?.value || '';
+  const sector = (document.getElementById('flightSector')?.value || '').trim();
+  const realRaw = document.getElementById('flightRealMin')?.value;
+  const realMin = realRaw !== '' && realRaw != null && !isNaN(realRaw) ? Math.max(0, parseInt(realRaw)) : null;
+  const chkState = loadChecklist();
+  const chkDone = CHECKLIST_ITEMS.filter((_, i) => !!chkState[i]).length;
+  // condiciones del despegue, no del momento de guardar
+  const snap = window.pendingFlightSnapshot || window.lastRenderSnapshot || {};
+
+  const entries = loadLog();
+  entries.unshift({
+    ...snap,
+    ...aircraftInfo,
+    flightNumber,
+    status: pendingFlightStatus,
+    emergency: !!pendingFlightEmergency,
+    reason: pendingFlightStatus==='cancelado' ? reason : '',
+    notes,
+    takeoff,
+    landing,
+    durationMin: flightDurationMin(takeoff, landing),
+    realFlightMin: realMin,
+    sector,
+    checklistAtFlight: `${chkDone}/${CHECKLIST_ITEMS.length}`,
+    turnoId: turno?.id || null,
+    timedByApp: !!fromTimer,
+    savedAt: new Date().toISOString()
+  });
+  if(entries.length > 200) entries.length = 200;
+  saveLog(entries);
+
+  if(turno){ turno.flightCount = flightNumber; localStorage.setItem(TURNO_KEY, JSON.stringify(turno)); renderTurnoBar(); }
+
+  if(fromTimer) clearActiveFlight();
+  window.pendingFlightSnapshot = null;
+  window.pendingFlightAircraft = null;
+  closeFlightModal();
+  renderFlyBar();
+  renderLog();
+}
+// Carga de un vuelo a un turno ya cerrado. Va marcado como retroactivo de forma
+// permanente: un registro cargado después no vale como uno tomado en el momento.
+function confirmRetroFlight(turnoIdx, flightNumber){
+  const hist = loadTurnoHistory();
+  const t = hist[turnoIdx];
+  if(!t) return;
+  const takeoff = document.getElementById('flightTakeoff')?.value || '';
+  const landing = document.getElementById('flightLanding')?.value || '';
+  const realRaw = document.getElementById('flightRealMin')?.value;
+  const realMin = realRaw !== '' && realRaw != null && !isNaN(realRaw) ? Math.max(0, parseInt(realRaw)) : null;
+
+  const entry = {
+    flightNumber,
+    status: pendingFlightStatus,
+    emergency: !!pendingFlightEmergency,
+    reason: pendingFlightStatus==='cancelado' ? (document.getElementById('flightReason')?.value || '').trim() : '',
+    notes: (document.getElementById('flightNotes')?.value || '').trim(),
+    sector: (document.getElementById('flightSector')?.value || '').trim(),
+    takeoff,
+    landing,
+    durationMin: flightDurationMin(takeoff, landing),
+    realFlightMin: realMin,
+    turnoId: t.id,
+    retroactive: true,
+    addedAt: new Date().toISOString()
+  };
+
+  t.flights = t.flights || [];
+  t.flights.push(entry);
+  t.flights.sort((a,b) => (a.takeoff||'').localeCompare(b.takeoff||''));
+  t.flightCount = t.flights.length;
+  hist[turnoIdx] = t;
+  saveTurnoHistory(hist);
+
+  closeFlightModal();
+  renderTurnoHistory();
+  alert('Vuelo agregado al turno.\n\nDescarga el reporte de nuevo para que incluya este registro.');
+}
+function deleteLogEntry(idx){
+  const entries = loadLog();
+  entries.splice(idx, 1);
+  saveLog(entries);
+  renderLog();
+}
+function renderLog(){
+  const entries = loadLog();
+  document.getElementById('logCount').textContent = entries.length ? `(${entries.length})` : '';
+  if(!entries.length){
+    document.getElementById('logEntries').innerHTML = '<div class="log-empty">Sin vuelos registrados aún.</div>';
+    return;
+  }
+  document.getElementById('logEntries').innerHTML = entries.map((e,i) => {
+    const dur = fmtDuration(e.durationMin);
+    return `
+    <div class="log-entry">
+      <div class="le-top">
+        <span class="le-status ${e.status==='cancelado' ? 'danger' : 'safe'}">
+          Vuelo ${e.flightNumber||'—'} · ${e.status==='cancelado' ? 'Cancelado' : 'Realizado'}
+        </span>        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn-mini" onclick="openEditFlightModal(${i})">Editar</button>
+          <button class="le-del" onclick="deleteLogEntry(${i})">✕</button>
+        </div>
+      </div>
+      <div class="le-detail">
+        ${e.emergency ? '<span class="fly-tag">Emergencia</span> ' : ''}${e.retroactive ? '<span class="fly-tag retro">Retroactivo</span> ' : ''}${(e.emergency||e.retroactive) ? '<br>' : ''}
+        ${flightRepDate(e)} · ${e.locLabel||'—'}<br>
+        ${(e.temp != null && e.temp !== '') ? `${e.temp}°C · viento ${e.wind}/${e.gust} km/h · Kp ${e.kp} · condición: ${e.headline}` : 'Sin registro meteorológico'}${e.aircraftName ? ` · ${e.aircraftName} (${e.aircraftCategory})` : ''}
+        ${(e.takeoff && e.landing) ? `<br><b>Operación:</b> ${e.takeoff} – ${e.landing}${dur ? ` · ${dur}` : ''}${e.timedByApp ? ' ⏱' : ''}` : ''}
+        ${e.realFlightMin != null ? `<br><b>Vuelo real:</b> ${fmtDuration(e.realFlightMin)}` : ''}
+        ${e.sector ? `<br><b>Sector:</b> ${e.sector}` : ''}
+        ${e.checklistAtFlight && e.checklistAtFlight !== `${CHECKLIST_ITEMS.length}/${CHECKLIST_ITEMS.length}` ? `<br><b>Checklist al volar:</b> ${e.checklistAtFlight}` : ''}
+        ${e.reason ? `<br><b>Motivo:</b> ${e.reason}` : ''}
+        ${e.notes ? `<br><b>Notas:</b> ${e.notes}` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+// ============ EXPORTACIÓN ESTILIZADA DE LA BITÁCORA (HTML / PNG) ============
+function reportStyleBlock(){
+  return `<style>
+    :root{
+      --bg:#0A0E13;--panel:#121820;--panel2:#161D26;--line:#22303C;
+      --amber:#FFB020;--amber-dim:#8A6112;--safe:#39D98A;--warn:#FFB020;--danger:#FF5252;
+      --text:#E7EDF3;--muted:#7C8B99;
+      --mono:'IBM Plex Mono',ui-monospace,monospace;
+      --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      --brand:'Audiowide',var(--sans);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+    body{padding:26px 18px 48px;max-width:640px;margin:0 auto;}
+    .rep-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--line);}
+    .rep-brand{display:flex;align-items:center;gap:12px;}
+    .rep-mark{width:38px;height:38px;border:2px solid var(--amber);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--amber);font-size:15px;transform:rotate(-6deg);}
+    .rep-title{font-size:19px;font-weight:800;letter-spacing:-.01em;}
+    .rep-sub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:2px;}
+    .rep-totals{display:flex;gap:8px;}
+    .rep-total{font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;}
+    .rep-total.safe{background:#0E2A1F;color:var(--safe);}
+    .rep-total.danger{background:#2A1212;color:var(--danger);}
+    .log-entry{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+    .le-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+    .le-status{font-family:var(--mono);font-weight:700;font-size:11px;text-transform:uppercase;padding:3px 10px;border-radius:5px;}
+    .le-status.safe{background:#0E2A1F;color:var(--safe);}
+    .le-status.danger{background:#2A1212;color:var(--danger);}
+    .rep-date{font-family:var(--mono);font-size:11px;color:var(--muted);}
+    .rep-entry-detail div{color:var(--muted);line-height:1.6;font-size:12px;margin-bottom:2px;}
+    .rep-entry-detail b{color:var(--text);}
+    .log-empty{color:var(--muted);text-align:center;padding:30px 0;font-family:var(--mono);font-size:12px;}
+    .rep-foot{margin-top:26px;text-align:center;line-height:1.6;}
+    .rep-foot-brand{font-family:var(--brand);font-size:15px;letter-spacing:.08em;color:var(--amber);}
+    .rep-foot-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;}
+    .rep-section-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--amber);margin:22px 0 10px;}
+    .chk-block{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 16px;margin-bottom:8px;}
+    .chk-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted);}
+    .chk-row:last-child{border-bottom:none;}
+    .chk-row.done{color:var(--text);}
+    .chk-mark{width:16px;flex-shrink:0;color:var(--danger);}
+    .chk-row.done .chk-mark{color:var(--safe);}
+  </style>`;
+}
+function buildLogReportBody(entries){
+  const now = new Date();
+  const realizados = entries.filter(e => e.status !== 'cancelado').length;
+  const cancelados = entries.filter(e => e.status === 'cancelado').length;
+  const rows = entries.slice().reverse().map(e => `
+    <div class="log-entry">
+      <div class="le-top">
+        <span class="le-status ${e.status==='cancelado' ? 'danger' : 'safe'}">${flightRepStatus(e)}</span>
+        <span class="rep-date">${flightRepDate(e)}</span>
+      </div>
+      <div class="rep-entry-detail">${flightDetailRows(e, {windDir:true})}
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="rep-header">
+      <div class="rep-brand">
+        <div class="rep-mark">RPA</div>
+        <div>
+          <div class="rep-title">Bitácora de vuelos</div>
+          <div class="rep-sub">Exportado ${now.toLocaleString('es-CL')}</div>
+        </div>
+      </div>
+      <div class="rep-totals">
+        <span class="rep-total safe">${realizados} realizados</span>
+        <span class="rep-total danger">${cancelados} cancelados</span>
+      </div>
+    </div>
+    <div>${rows || '<div class="log-empty">Sin vuelos registrados.</div>'}</div>
+    <div class="rep-foot"><div class="rep-foot-brand">SENTINEL AIR</div><div class="rep-foot-sub">Sistema de condición de vuelo RPA</div></div>
+  `;
+}
+function buildTurnoReportBody(turno, flights, checklistState){
+  const start = new Date(turno.startedAt);
+  const end = turno.endedAt ? new Date(turno.endedAt) : new Date();
+  const hrs = ((end - start) / 3600000).toFixed(1);
+  const realizados = flights.filter(e => e.status !== 'cancelado').length;
+  const cancelados = flights.filter(e => e.status === 'cancelado').length;
+  const totalMin = flights.reduce((acc, e) => acc + (e.durationMin || 0), 0);
+
+  const items = turno.checklistItems || CHECKLIST_ITEMS;
+  const chkDone = items.filter((_, i) => !!checklistState[i]).length;
+  const chkRows = items.map((item, i) => `
+    <div class="chk-row ${checklistState[i] ? 'done' : ''}">
+      <span class="chk-mark">${checklistState[i] ? '✔' : '✘'}</span>${item}
+    </div>`).join('');
+
+  const rows = flights.slice().reverse().map(e => {
+    return `
+    <div class="log-entry">
+      <div class="le-top">
+        <span class="le-status ${e.status==='cancelado' ? 'danger' : 'safe'}">${flightRepStatus(e)}</span>
+        <span class="rep-date">${flightRepDate(e)}</span>
+      </div>
+      <div class="rep-entry-detail">${flightDetailRows(e, {windDir:true, checklist:true})}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="rep-header">
+      <div class="rep-brand">
+        <div class="rep-mark">RPA</div>
+        <div>
+          <div class="rep-title">Reporte de turno</div>
+          <div class="rep-sub">${turno.operator||'Sin especificar'} · ${turno.position||'Sin especificar'} · turno ${turno.mode||'—'}</div>
+          <div class="rep-sub">${start.toLocaleString('es-CL')} — ${end.toLocaleString('es-CL')} · ${hrs}h de turno</div>
+          ${totalMin ? `<div class="rep-sub">Horas de vuelo acumuladas: ${fmtDuration(totalMin)}</div>` : ''}
+          ${turno.battery ? `<div class="rep-sub">Baterías / ciclos: ${turno.battery}</div>` : ''}
+        </div>
+      </div>
+      <div class="rep-totals">
+        <span class="rep-total safe">${realizados} realizados</span>
+        <span class="rep-total danger">${cancelados} cancelados</span>
+      </div>
+    </div>
+
+    <div class="rep-section-title">Checklist pre-vuelo · ${chkDone}/${items.length}</div>
+    <div class="chk-block">${chkRows}</div>
+
+    <div class="rep-section-title">Vuelos del turno</div>
+    <div>${rows || '<div class="log-empty">Sin vuelos registrados en este turno.</div>'}</div>
+    <div class="rep-foot"><div class="rep-foot-brand">SENTINEL AIR</div><div class="rep-foot-sub">Sistema de condición de vuelo RPA</div></div>
+  `;
+}
+function exportTurnoReport(turno){
+  if(!turno?.id) return; // turnos anteriores a esta versión no tienen id — sin reporte automático posible
+  // los turnos finalizados llevan sus vuelos y checklist archivados dentro; si no (turno en curso), se leen de la bitácora
+  const flights = turno.flights || loadLog().filter(e => e.turnoId === turno.id);
+  let checklistState = turno.checklistState;
+  if(!checklistState){
+    try{ checklistState = JSON.parse(localStorage.getItem('rpa_checklist_turno_' + turno.id)) || {}; }catch(e){ checklistState = {}; }
+  }
+
+  const doc = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de turno RPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Audiowide&display=swap" rel="stylesheet">
+${reportStyleBlock()}
+</head><body>${buildTurnoReportBody(turno, flights, checklistState)}</body></html>`;
+  const blob = new Blob([doc], {type:'text/html'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  const dateSlug = new Date(turno.startedAt).toISOString().slice(0,10);
+  const opSlug = (turno.operator||'operador').trim().replace(/\s+/g,'_').toLowerCase();
+  link.download = `turno_${dateSlug}_${opSlug}.html`;
+  link.click();
+}
+function exportLogHTML(){
+  const entries = loadLog();
+  if(!entries.length){ alert('No hay vuelos registrados para exportar.'); return; }
+  const doc = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de vuelos RPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Audiowide&display=swap" rel="stylesheet">
+${reportStyleBlock()}
+</head><body>${buildLogReportBody(entries)}</body></html>`;
+  const blob = new Blob([doc], {type:'text/html'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `bitacora_vuelos_${new Date().toISOString().slice(0,10)}.html`;
+  link.click();
+}
+async function exportLogPNG(){
+  const entries = loadLog();
+  if(!entries.length){ alert('No hay vuelos registrados para exportar.'); return; }
+  if(typeof html2canvas === 'undefined'){ alert('No se pudo preparar la exportación.'); return; }
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:640px;';
+  wrap.innerHTML = reportStyleBlock() + buildLogReportBody(entries);
+  document.body.appendChild(wrap);
+  try{
+    const canvas = await html2canvas(wrap, {backgroundColor:'#0A0E13', scale:2});
+    const link = document.createElement('a');
+    link.download = `bitacora_vuelos_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }catch(e){
+    alert('Error al exportar: '+e.message);
+  }finally{
+    document.body.removeChild(wrap);
+  }
+}
+renderLog();
+renderTurnoBar();
+renderFlyBar();
+renderTurnoHistory();
+renderAircraftPanel();
+applyAccordionState();
+setInterval(renderTurnoBar, 60000); // refresca el contador de horas del turno cada minuto
+
+function extractKpFromAny(j){
+  // soporta formato viejo (array de arrays con encabezado) y formato nuevo (array de objetos)
+  if(!Array.isArray(j) || !j.length) return null;
+
+  // formato array de objetos: [{time_tag, kp_index, estimated_kp, Kp, ...}, ...]
+  if(typeof j[0] === 'object' && !Array.isArray(j[0])){
+    const keys = Object.keys(j[j.length-1]);
+    const kpKey = keys.find(k => /^(kp|kp_index|estimated_kp)$/i.test(k));
+    if(kpKey){
+      for(let i=j.length-1; i>=0; i--){
+        const v = parseFloat(j[i][kpKey]);
+        if(!isNaN(v)) return v;
+      }
+    }
+    return null;
+  }
+
+  // formato array de arrays: [ [header...], [time, kp, a_running, station_count], ... ]
+  for(let i=j.length-1; i>0; i--){
+    const v = parseFloat(j[i][1]);
+    if(!isNaN(v)) return v;
+  }
+  return null;
+}
+
+async function fetchWithTimeout(url, ms=5000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  try{
+    return await fetch(url, {signal: ctrl.signal});
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function fetchNOAAKp(){
+  const urls = [
+    'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
+    'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
+  ];
+  let lastErr;
+  for(const url of urls){
+    try{
+      const r = await fetchWithTimeout(url, 4000);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const j = await r.json();
+      const v = extractKpFromAny(j);
+      if(v !== null) return {value:v, source:'NOAA SWPC'};
+      throw new Error('sin valor válido en '+url);
+    }catch(e){ lastErr = e; }
+  }
+  throw new Error('NOAA: '+(lastErr ? lastErr.message : 'error desconocido'));
+}
+
+async function fetchGFZKp(){
+  const now = new Date();
+  const start = new Date(now.getTime() - 24*3600*1000);
+  const iso = d => d.toISOString().slice(0,19);
+  const url = `https://kp.gfz.de/app/json/?start=${iso(start)}&end=${iso(now)}&index=Kp&status=def`;
+  const r = await fetchWithTimeout(url, 4000);
+  if(!r.ok) throw new Error('GFZ HTTP '+r.status);
+  const j = await r.json();
+  const vals = j.Kp || j.kp || j.index || (Array.isArray(j) ? j.map(row=>row[1]) : null);
+  if(Array.isArray(vals) && vals.length){
+    for(let i=vals.length-1; i>=0; i--){
+      const v = parseFloat(vals[i]);
+      if(!isNaN(v)) return {value:v, source:'GFZ Potsdam'};
+    }
+  }
+  throw new Error('GFZ sin valor válido');
+}
+
+async function fetchNOAAKpViaProxy(){
+  // último recurso: proxy público que agrega cabeceras CORS por si el navegador bloquea la fuente directa
+  const target = encodeURIComponent('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json');
+  const r = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${target}`, 6000);
+  if(!r.ok) throw new Error('proxy HTTP '+r.status);
+  const j = await r.json();
+  const v = extractKpFromAny(j);
+  if(v !== null) return {value:v, source:'NOAA SWPC (proxy)'};
+  throw new Error('proxy sin valor válido');
+}
+
+async function fetchKp(){
+  // se intentan las fuentes directas EN PARALELO primero
+  const results = await Promise.allSettled([fetchNOAAKp(), fetchGFZKp()]);
+  const errors = [];
+  results.forEach((r,i)=>{
+    if(r.status==='rejected'){
+      const msg = ['NOAA','GFZ'][i]+': '+r.reason.message;
+      console.warn(msg); errors.push(msg);
+    }
+  });
+  const ok = results.find(r=>r.status==='fulfilled');
+  if(ok) return ok.value;
+
+  // si ambas fallaron (probable bloqueo CORS), se intenta vía proxy como último recurso
+  try{
+    return await fetchNOAAKpViaProxy();
+  }catch(e){
+    errors.push('Proxy: '+e.message);
+    console.warn('Proxy también falló:', e.message);
+    return {value:null, source:null, errors};
+  }
+}
+
+async function fetchWeather(lat, lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,wind_direction_10m`
+    + `&daily=sunrise,sunset&timezone=auto&wind_speed_unit=kmh&forecast_days=3`;
+  const r = await fetchWithTimeout(url, 8000);
+  return r.json();
+}
+
+function nearestHourIndex(times){
+  const now = Date.now();
+  let bestI=0, bestDiff=Infinity;
+  times.forEach((t,i)=>{
+    const diff = Math.abs(new Date(t).getTime()-now);
+    if(diff<bestDiff){bestDiff=diff;bestI=i;}
+  });
+  return bestI;
+}
+
+function compassSVG(windDeg){
+  // el viento "sopla desde" windDeg — la flecha se dibuja apuntando HACIA donde va (windDeg+180),
+  // con la cola en el origen del viento, para que se lea de forma intuitiva.
+  const toAngle = (windDeg + 180) % 360;
+  return `<svg viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+
+    <!-- marcas cardinales únicamente, sin números -->
+    <line x1="60" y1="8"   x2="60" y2="17" stroke="var(--muted)" stroke-width="1.5"/>
+    <line x1="60" y1="103" x2="60" y2="112" stroke="var(--muted)" stroke-width="1.5"/>
+    <line x1="8"  y1="60"  x2="17" y2="60" stroke="var(--muted)" stroke-width="1.5"/>
+    <line x1="103" y1="60" x2="112" y2="60" stroke="var(--muted)" stroke-width="1.5"/>
+    <text x="60" y="27" text-anchor="middle" font-family="var(--sans)" font-size="10" font-weight="700" fill="var(--text)">N</text>
+    <text x="60" y="99" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--muted)">S</text>
+    <text x="24" y="64" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--muted)">O</text>
+    <text x="96" y="64" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--muted)">E</text>
+
+    <!-- flecha de VIENTO (ámbar): cola = de dónde viene, punta = hacia dónde va -->
+    <g transform="rotate(${toAngle} 60 60)">
+      <line x1="60" y1="80" x2="60" y2="38" stroke="var(--amber)" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="60,27 53,40 67,40" fill="var(--amber)"/>
+    </g>
+
+    <!-- rumbo del teléfono (celeste) — oculta hasta obtener señal del sensor -->
+    <g id="deviceNeedleGroup" transform="rotate(0 60 60)" opacity="0" style="transition:transform .1s linear, opacity .2s">
+      <line x1="60" y1="60" x2="60" y2="34" stroke="#5AB8FF" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="60,25 55,35 65,35" fill="#5AB8FF"/>
+    </g>
+
+    <circle cx="60" cy="60" r="3" fill="var(--text)" opacity=".55"/>
+  </svg>`;
+}
+
+// ============ GIROSCOPIO / BRÚJULA DEL TELÉFONO ============
+const COMPASS_PREF_KEY = 'rpa_compass_enabled';
+function loadCompassPref(){ try{ return localStorage.getItem(COMPASS_PREF_KEY) === '1'; }catch(e){ return false; } }
+function saveCompassPref(v){ try{ localStorage.setItem(COMPASS_PREF_KEY, v ? '1' : '0'); }catch(e){} }
+
+let compassEnabled = false;      // controlado por el interruptor — apagado por defecto
+let listenersAttached = false;
+let absoluteEventSeen = false;   // true en cuanto llega un dato realmente referenciado al norte
+let headingReceived = false;
+
+// se separa "dato crudo del sensor" (llega hasta 60x/seg, con ruido) de "lo que se dibuja"
+// (se redibuja a ritmo fijo y filtrado) — así se evita el temblor típico de leer cada evento tal cual
+let rawHeadingLatest = null;
+let displayedHeading = null;      // rumbo mostrado, en dominio continuo (no se recorta a 0-360)
+const HEADING_DEAD_ZONE = 0.6;    // cambios menores a esto se ignoran por completo (ruido del magnetómetro)
+const HEADING_SMOOTH_SLOW = 0.06; // teléfono quieto → frena fuerte, como la brújula nativa
+const HEADING_SMOOTH_FAST = 0.35; // giro real de la mano → responde rápido, sin sentirse pegado
+const HEADING_RENDER_MS = 90;     // ritmo de redibujado (~11 fps), desacoplado de la frecuencia del sensor
+
+// rumbo compensado por inclinación del teléfono (evita saltos cuando no se sostiene perfectamente plano)
+function tiltCompensatedHeading(alpha, beta, gamma){
+  const aRad = alpha * Math.PI/180, bRad = beta * Math.PI/180, gRad = gamma * Math.PI/180;
+  const cA = Math.cos(aRad), sA = Math.sin(aRad);
+  const cB = Math.cos(bRad), sB = Math.sin(bRad);
+  const cG = Math.cos(gRad), sG = Math.sin(gRad);
+
+  const rA = -cA*sG - sA*sB*cG;
+  const rB = -sA*sG + cA*sB*cG;
+
+  let heading = Math.atan2(rA, rB) * 180/Math.PI;
+  if(heading < 0) heading += 360;
+  return heading;
+}
+
+function shortestAngleDelta(from, to){
+  return ((to - from + 540) % 360) - 180; // diferencia angular en [-180, 180], camino más corto
+}
+
+function processOrientationEvent(e){
+  let rawHeading = null;
+  if(typeof e.webkitCompassHeading === 'number'){
+    rawHeading = e.webkitCompassHeading; // iOS Safari: ya viene referenciado al norte real
+  } else if(e.alpha !== null && e.beta !== null && e.gamma !== null){
+    rawHeading = tiltCompensatedHeading(e.alpha, e.beta, e.gamma);
+  }
+  if(rawHeading === null) return;
+  headingReceived = true;
+  rawHeadingLatest = rawHeading; // solo se guarda; el redibujado lo hace el loop de abajo
+  setCompassStatus('');
+}
+
+// evento "absolute": referenciado al norte real — es la única fuente confiable, se usa siempre que exista
+function handleAbsoluteOrientation(e){
+  absoluteEventSeen = true;
+  processOrientationEvent(e);
+}
+// evento normal: en algunos navegadores es RELATIVO (no apunta al norte, solo al punto donde
+// empezó a leer) — mezclar ambas fuentes a la vez es lo que hacía que la brújula "no marcara nada real".
+// Solo se usa si nunca llegó un evento absoluto Y el propio navegador marca este dato como absoluto,
+// o si trae webkitCompassHeading (iOS).
+function handleFallbackOrientation(e){
+  if(absoluteEventSeen) return;
+  if(e.absolute === true || typeof e.webkitCompassHeading === 'number'){
+    processOrientationEvent(e);
+  }
+}
+
+function attachOrientationListeners(){
+  if(listenersAttached) return;
+  listenersAttached = true;
+  absoluteEventSeen = false;
+  window.addEventListener('deviceorientationabsolute', handleAbsoluteOrientation, true);
+  window.addEventListener('deviceorientation', handleFallbackOrientation, true);
+}
+function detachOrientationListeners(){
+  window.removeEventListener('deviceorientationabsolute', handleAbsoluteOrientation, true);
+  window.removeEventListener('deviceorientation', handleFallbackOrientation, true);
+  listenersAttached = false;
+  headingReceived = false;
+  rawHeadingLatest = null;
+  displayedHeading = null;
+  const group = document.getElementById('deviceNeedleGroup');
+  if(group) group.setAttribute('opacity', '0');
+}
+
+function setCompassStatus(html){
+  const el = document.getElementById('compassStatus');
+  if(!el) return;
+  el.innerHTML = html;
+  el.style.display = html ? 'block' : 'none';
+}
+function renderCompassToggle(){
+  const btn = document.getElementById('compassToggleBtn');
+  if(btn) btn.textContent = compassEnabled ? 'Desactivar brújula' : 'Activar brújula';
+}
+
+function enableCompassFlow(){
+  if(typeof DeviceOrientationEvent === 'undefined'){
+    setCompassStatus('Brújula no disponible en este dispositivo.');
+    compassEnabled = false; saveCompassPref(false); renderCompassToggle();
+    return;
+  }
+  if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+    // iOS 13+ exige un toque del usuario para conceder el permiso
+    DeviceOrientationEvent.requestPermission().then(res => {
+      if(res === 'granted'){
+        attachOrientationListeners();
+        setCompassStatus('');
+        setTimeout(() => { if(!headingReceived) setCompassStatus('No se detectó señal de orientación confiable.'); }, 2500);
+      } else {
+        setCompassStatus('Permiso de orientación denegado.');
+        compassEnabled = false; saveCompassPref(false); renderCompassToggle();
+      }
+    }).catch(() => {
+      setCompassStatus('Brújula no disponible en este dispositivo.');
+      compassEnabled = false; saveCompassPref(false); renderCompassToggle();
+    });
+  } else {
+    attachOrientationListeners();
+    setTimeout(() => { if(!headingReceived) setCompassStatus('No se detectó señal de orientación confiable en este dispositivo.'); }, 2500);
+  }
+}
+function toggleCompass(){
+  compassEnabled = !compassEnabled;
+  saveCompassPref(compassEnabled);
+  renderCompassToggle();
+  if(compassEnabled){
+    setCompassStatus('');
+    enableCompassFlow();
+  } else {
+    detachOrientationListeners();
+    setCompassStatus('');
+  }
+}
+// intenta reconectar en silencio si ya estaba activada en una sesión anterior (solo una vez, al cargar)
+let compassAutoResumeAttempted = false;
+function resumeCompassIfEnabled(){
+  if(compassAutoResumeAttempted) return;
+  compassAutoResumeAttempted = true;
+  compassEnabled = loadCompassPref();
+  renderCompassToggle();
+  if(compassEnabled) enableCompassFlow();
+}
+
+// redibuja a ritmo fijo, con zona muerta para el ruido y suavizado que se adapta a qué tanto cambió
+function compassRenderTick(){
+  if(!compassEnabled || rawHeadingLatest === null) return;
+  const group = document.getElementById('deviceNeedleGroup');
+  if(!group) return;
+
+  if(displayedHeading === null){
+    displayedHeading = rawHeadingLatest;
+  } else {
+    const current = ((displayedHeading % 360) + 360) % 360;
+    const delta = shortestAngleDelta(current, rawHeadingLatest);
+    if(Math.abs(delta) >= HEADING_DEAD_ZONE){
+      const factor = Math.abs(delta) > 12 ? HEADING_SMOOTH_FAST : HEADING_SMOOTH_SLOW;
+      displayedHeading += delta * factor;
+    }
+    // si el cambio fue menor a la zona muerta, no se toca displayedHeading — la aguja queda quieta
+  }
+
+  group.setAttribute('opacity', '1');
+  group.setAttribute('transform', `rotate(${displayedHeading} 60 60)`);
+}
+setInterval(compassRenderTick, HEADING_RENDER_MS);
+
+
+function render(data, kp){
+  lastWeather = data; lastKp = kp;
+  const kpVal = kp ? kp.value : null;
+  const kpSrc = kp ? kp.source : null;
+
+  const hIdx = nearestHourIndex(data.hourly.time);
+  const h = data.hourly;
+
+  const temp = h.temperature_2m[hIdx];
+  const rh = h.relative_humidity_2m[hIdx];
+  const dew = dewPoint(temp, rh);
+  const spread = temp - dew;
+  const wind = h.wind_speed_10m[hIdx];
+  const gust = h.wind_gusts_10m[hIdx];
+  const windDir = h.wind_direction_10m[hIdx];
+  const precip = h.precipitation_probability ? h.precipitation_probability[hIdx] : 0;
+  const cloud = h.cloud_cover[hIdx];
+  const vis = h.visibility ? (h.visibility[hIdx]/1000).toFixed(1) : '—';
+
+  // --- umbrales: procedimiento DGR (viento 40km/h), DAN 151 (nocturno=VNOC+luces),
+  //     límites de fábrica DJI M30/M30T (15 m/s=54km/h vuelo, 12m/s=43km/h despegue/aterrizaje) ---
+  let issues = [];
+  let level = 'safe'; // safe | warn | danger
+
+  // de noche exigimos más margen: visibilidad y niebla son más críticas sin luz natural
+  const s = loadSettings();
+  const moon = moonPhaseInfo(new Date());
+  const windDangerG = isNight ? s.windDangerG - 5 : s.windDangerG, windDangerS = isNight ? s.windDangerS - 5 : s.windDangerS;
+  const windWarnG = isNight ? s.windWarnG - 4 : s.windWarnG, windWarnS = isNight ? s.windWarnS - 4 : s.windWarnS;
+  const visDanger = isNight ? s.visDanger + 1 : s.visDanger, visWarn = isNight ? s.visWarn + 2 : s.visWarn;
+  const dewDanger = isNight ? s.dewDanger + 0.5 : s.dewDanger, dewWarn = isNight ? s.dewWarn + 1 : s.dewWarn;
+  const tempDanger = isNight ? s.tempDanger + 1 : s.tempDanger, tempWarn = isNight ? s.tempWarn + 1 : s.tempWarn;
+
+  if(gust >= windDangerG || wind >= windDangerS){ issues.push(`Viento/ráfaga ≥ límite operacional (${windDangerG} km/h)`); level='danger'; }
+  else if(gust >= windWarnG || wind >= windWarnS){ issues.push('Viento elevado — vigilar ráfagas'); if(level!=='danger') level='warn'; }
+
+  if(spread <= dewDanger){ issues.push(`Punto de rocío muy cercano (Δ${spread.toFixed(1)}°C) — alto riesgo de niebla`); level='danger'; }
+  else if(spread <= dewWarn){ issues.push(`Punto de rocío cercano (Δ${spread.toFixed(1)}°C) — riesgo de niebla/condensación`); if(level==='safe') level='warn'; }
+
+  // temperatura ambiente baja: riesgo aparte del margen a rocío — el aire puede tener margen suficiente
+  // mientras superficies (carrocería, hélices, sensores) se enfrían por radiación y igual acumulan condensación;
+  // además el frío reduce la capacidad y aumenta la tasa de descarga de baterías LiPo, más notorio en equipos antiguos.
+  if(temp <= tempDanger){ issues.push(`Temperatura ambiente muy baja (${temp.toFixed(1)}°C) — condensación en superficies y batería en riesgo`); level='danger'; }
+  else if(temp <= tempWarn){ issues.push(`Temperatura ambiente baja (${temp.toFixed(1)}°C) — vigilar condensación en superficies y autonomía de batería`); if(level==='safe') level='warn'; }
+
+  if(precip >= s.precipDanger){ issues.push(`Probabilidad de precipitación ${precip}%`); level='danger'; }
+  else if(precip >= s.precipWarn){ issues.push(`Probabilidad de precipitación ${precip}%`); if(level==='safe') level='warn'; }
+
+  if(vis !== '—' && parseFloat(vis) < visDanger){ issues.push(`Visibilidad reducida (${vis} km)`); level='danger'; }
+  else if(vis !== '—' && parseFloat(vis) < visWarn){ issues.push(`Visibilidad limitada (${vis} km)`); if(level==='safe') level='warn'; }
+
+  // Kp: escala 0-9 de actividad geomagnética. Por encima de 4 se considera tormenta geomagnética
+  // menor o superior — riesgo real de degradación de GPS/brújula, umbral usado como límite operacional
+  // por buena práctica internacional (no una norma única, sino referencia de consenso del sector).
+  if(kpVal !== null && kpVal > s.kpDanger){ issues.push(`Índice Kp ${kpVal.toFixed(1)} — tormenta geomagnética, riesgo de pérdida de GPS/brújula`); level='danger'; }
+  else if(kpVal !== null && kpVal > s.kpWarn){ issues.push(`Índice Kp ${kpVal.toFixed(1)} — actividad geomagnética elevada`); if(level==='safe') level='warn'; }
+
+  const headline = level==='safe' ? 'APTO PARA VOLAR' : level==='warn' ? 'PRECAUCIÓN' : 'NO APTO PARA VOLAR';
+  const reasonText = issues.length ? issues.join(' · ') : 'Condiciones dentro de parámetros normales de operación.';
+
+  const flagWind = (gust>=windDangerG||wind>=windDangerS) ? 'flag-danger' : (gust>=windWarnG||wind>=windWarnS) ? 'flag-warn' : '';
+  const flagDew = spread<=dewDanger ? 'flag-danger' : spread<=dewWarn ? 'flag-warn' : '';
+  const flagTemp = temp<=tempDanger ? 'flag-danger' : temp<=tempWarn ? 'flag-warn' : '';
+  const flagVis = (vis!=='—'&&parseFloat(vis)<visDanger) ? 'flag-danger' : (vis!=='—'&&parseFloat(vis)<visWarn) ? 'flag-warn' : '';
+  const flagPrecip = precip>=50 ? 'flag-danger' : precip>=20 ? 'flag-warn' : '';
+  const flagKp = (kpVal!==null && kpVal>s.kpDanger) ? 'flag-danger' : (kpVal!==null && kpVal>s.kpWarn) ? 'flag-warn' : '';
+
+  // --- valores para MOSTRAR (convertidos si corresponde) — la evaluación de arriba sigue siempre en métrico ---
+  const dispTemp = isImperial ? cToF(temp) : temp;
+  const dispDew = isImperial ? cToF(dew) : dew;
+  const dispSpread = isImperial ? spread*9/5 : spread; // delta de temperatura, no punto fijo
+  const dispWind = isImperial ? kmhToMph(wind) : wind;
+  const dispGust = isImperial ? kmhToMph(gust) : gust;
+  const dispVis = vis!=='—' ? (isImperial ? kmToMi(parseFloat(vis)).toFixed(1) : vis) : '—';
+  const tUnit = isImperial ? '°F' : '°C';
+  const wUnit = isImperial ? 'mph' : 'km/h';
+  const visUnit = isImperial ? 'mi' : 'km';
+  const windLimitDisp = isImperial ? Math.round(kmhToMph(windDangerG)) : windDangerG;
+
+  // --- desglose "por qué" del resultado: mismos flags ya calculados arriba, traducidos a nivel + valor legible ---
+  const flagLevel = f => f==='flag-danger' ? 'danger' : f==='flag-warn' ? 'warn' : 'safe';
+  const riskItems = [
+    {label:'Viento',      level:flagLevel(flagWind),   val:`${dispWind.toFixed(0)}/${dispGust.toFixed(0)} ${wUnit}`},
+    {label:'Visibilidad', level:flagLevel(flagVis),    val:`${dispVis} ${visUnit}`},
+    {label:'Precipitación', level:flagLevel(flagPrecip), val:`${precip}%`},
+    {label:'Condensación', level:flagLevel(flagDew),   val:`Δ${dispSpread.toFixed(1)}°`},
+    {label:'Temperatura',  level:flagLevel(flagTemp),  val:`${dispTemp.toFixed(1)}${tUnit}`},
+    {label:'Act. geomagnética', level:flagLevel(flagKp), val:(kpVal!==null && !isNaN(kpVal)) ? `Kp ${kpVal.toFixed(1)}` : '—', tag:'no DGAC', full:true},
+  ];
+  const riskOkCount = riskItems.filter(r => r.level==='safe').length;
+  const riskFactorsHTML = riskItems.map(r => `
+    <div class="risk-factor ${r.level}">
+      <span class="rf-dot"></span><span class="rf-label">${r.label}</span>${r.tag ? `<span class="rf-tag">${r.tag}</span>` : ''}
+      <span class="rf-val">${r.val}</span>
+    </div>`).join('');
+  const riskSummaryBlock = `
+    <div class="risk-summary">
+      <div class="risk-toggle" onclick="toggleRiskInfo()">
+        <span class="risk-count"><b>${riskOkCount}/${riskItems.length}</b> factores dentro de límites</span>
+        <span class="chev">${riskExpanded ? '▴' : '▾'}</span>
+      </div>
+      ${riskExpanded ? `<div class="risk-factors">${riskFactorsHTML}</div>` : ''}
+    </div>`;
+
+  const vnocBlock = isNight ? `
+    <div class="vnoc-wrap">
+    <div class="vnoc-compact" onclick="toggleVnocInfo()">
+      <span class="vnoc-icon">i</span>
+      <span class="vnoc-label">Modo nocturno — requisitos DAN 151 (VNOC)</span>
+      <span class="chev">${vnocExpanded ? '▴' : '▾'}</span>
+    </div>
+    ${vnocExpanded ? `
+    <div class="vnoc">
+      Según DAN 151 Ed.4, art. 151.105(a) (DGAC, 2026): credencial con habilitación VNOC, procedimiento de vigilancia aérea aprobado por la DGAC, límite de 300 pies/100 m dentro del área de trabajo, luces de navegación/posición/estroboscópicas encendidas de forma constante y visibles a ≥500 m, sensores de detección de obstáculos y observador con habilitación VNOC. Recuerda que la operación debe mantenerse siempre en VMC.
+    </div>` : ''}
+    </div>` : '';
+
+  document.getElementById('app').innerHTML = `
+    ${vnocBlock}
+    <div class="status ${level}">
+      <div class="label">Evaluación automática · ${isNight?'nocturno':'diurno'}</div>
+      <div class="headline">${headline}</div>
+      <div class="reason">${reasonText}</div>
+      ${riskSummaryBlock}
+    </div>
+
+    <div class="section-title">Atmósfera</div>
+    <div class="grid">
+      <div class="card ${flagTemp}">
+        <div class="k">Temperatura</div>
+        <div class="v">${dispTemp.toFixed(1)}<span class="unit">${tUnit}</span></div>
+        <div class="sub">Punto de rocío: ${dispDew.toFixed(1)}${tUnit}${flagTemp ? ' · frío: vigilar condensación y batería' : ''}</div>
+      </div>
+      <div class="card ${flagDew}">
+        <div class="k">Margen a saturación</div>
+        <div class="v">${dispSpread.toFixed(1)}<span class="unit">${isImperial?'°F':'°C'}</span></div>
+        <div class="sub">${spread<=dewWarn ? 'riesgo de niebla' : 'sin riesgo inmediato'}</div>
+      </div>
+      <div class="card ${flagPrecip}">
+        <div class="k">Prob. precipitación</div>
+        <div class="v">${precip}<span class="unit">%</span></div>
+      </div>
+      <div class="card">
+        <div class="k">Nubosidad</div>
+        <div class="v">${cloud}<span class="unit">%</span></div>
+      </div>
+      <div class="card ${flagVis}">
+        <div class="k">Visibilidad</div>
+        <div class="v">${dispVis}<span class="unit">${visUnit}</span></div>
+      </div>
+      <div class="card ${flagKp}">
+        <div class="k">Índice Kp</div>
+        <div class="v">${(kpVal!==null && !isNaN(kpVal)) ? kpVal.toFixed(2) : '—'}</div>
+        <div class="sub" style="font-size:11px">${kpSrc || (kp&&kp.errors ? kp.errors.join(' · ') : 'sin datos')}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Viento (límite ${windLimitDisp} ${wUnit} ráfaga)</div>
+    <div class="grid">
+      <div class="card ${flagWind}">
+        <div class="k">Sostenido</div>
+        <div class="v">${dispWind.toFixed(0)}<span class="unit">${wUnit}</span></div>
+      </div>
+      <div class="card ${flagWind}">
+        <div class="k">Ráfagas</div>
+        <div class="v">${dispGust.toFixed(0)}<span class="unit">${wUnit}</span></div>
+      </div>
+      <div class="card wide" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <div class="k">Dirección del viento</div>
+            <div class="v">${dirToCompass(windDir)}<span class="unit">${windDir.toFixed(0)}°</span></div>
+            <div class="sub">Sopla desde ${dirToCompassFull(windDir)} hacia ${dirToCompassFull((windDir+180)%360)}</div>
+          </div>
+          <div class="compass">${compassSVG(windDir)}</div>
+        </div>
+        <div class="compass-legend" style="justify-content:space-between;align-items:center">
+          <span style="display:flex;gap:14px;flex-wrap:wrap">
+            <span><span class="dot" style="background:var(--amber)"></span> Viento</span>
+            <span><span class="dot" style="background:#5AB8FF"></span> Rumbo del teléfono</span>
+          </span>
+          <button class="btn-mini" id="compassToggleBtn" onclick="toggleCompass()">Activar brújula</button>
+        </div>
+        <div id="compassStatus" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Sol y Luna</div>
+    <div class="grid">
+      <div class="card">
+        <div class="k">Amanecer</div>
+        <div class="v" style="font-size:15px">${fmtTime(data.daily.sunrise[0])}</div>
+      </div>
+      <div class="card">
+        <div class="k">Atardecer</div>
+        <div class="v" style="font-size:15px">${fmtTime(data.daily.sunset[0])}</div>
+      </div>
+      <div class="card wide">
+        <div>
+          <div class="k">Fase lunar</div>
+          <div class="v" style="font-size:15px">${moon.name}</div>
+          <div class="sub">${moon.illumination.toFixed(0)}% iluminada${isNight ? ' — más luz = mejor VLOS nocturno' : ''}</div>
+        </div>
+        <div class="moon-emoji">${moon.emoji}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Próximas 24 horas</div>
+    <div class="hourstrip">${buildHourStrip(data, hIdx)}</div>
+  `;
+
+  // activa la brújula del teléfono automáticamente en el primer render (solo una vez)
+  // sincroniza el interruptor y reconecta el sensor si ya estaba activado en una sesión anterior
+  resumeCompassIfEnabled();
+  renderCompassToggle(); // por si este render no es el primero (el botón se recrea cada vez)
+
+  // snapshot para la bitácora — se guarda solo si el piloto toca "Guardar vuelo actual"
+  window.lastRenderSnapshot = {
+    level, headline, reasonText,
+    locLabel: document.getElementById('locLabel').textContent,
+    temp: dispTemp.toFixed(1), wind: dispWind.toFixed(0), gust: dispGust.toFixed(0),
+    windDirLabel: `${dirToCompass(windDir)} (${windDir.toFixed(0)}°)`,
+    kp: (kpVal!==null && !isNaN(kpVal)) ? kpVal.toFixed(1) : '—',
+    mode: isNight ? 'nocturno' : 'diurno'
+  };
+}
+
+function buildHourStrip(data, currentIdx){
+  const h = data.hourly;
+  const now = new Date();
+  let cards = '';
+  for(let i=currentIdx; i<Math.min(currentIdx+24, h.time.length); i++){
+    const t = new Date(h.time[i]);
+    const wind = h.wind_speed_10m[i], gust = h.wind_gusts_10m[i];
+    const temp = isImperial ? cToF(h.temperature_2m[i]) : h.temperature_2m[i];
+    const dispW = isImperial ? kmhToMph(wind) : wind;
+    const rh = h.relative_humidity_2m[i];
+    const dew = dewPoint(h.temperature_2m[i], rh);
+    const spread = h.temperature_2m[i] - dew;
+    const precip = h.precipitation_probability ? h.precipitation_probability[i] : 0;
+
+    // evaluación simplificada por hora (mismos umbrales base, sin distinguir día/noche para la franja)
+    let dot = 'safe';
+    if(gust>=40 || wind>=35 || spread<=1.5 || precip>=50) dot='danger';
+    else if(gust>=28 || wind>=22 || spread<=2.5 || precip>=20) dot='warn';
+
+    const isNow = i===currentIdx;
+    cards += `<div class="hourcard ${isNow?'now':''}">
+      <div class="hc-time">${isNow?'AHORA':t.toLocaleTimeString('es-CL',{hour:'2-digit'})}</div>
+      <div class="hc-dot ${dot}"></div>
+      <div class="hc-temp">${temp.toFixed(0)}°</div>
+      <div class="hc-wind">${dispW.toFixed(0)}${isImperial?'mph':'kmh'}</div>
+    </div>`;
+  }
+  return cards;
+}
+
+async function reverseGeocode(lat, lon){
+  // fuente primaria: BigDataCloud (gratis, sin API key, CORS habilitado)
+  try{
+    const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const parts = [j.locality, j.principalSubdivision].filter(Boolean);
+    if(parts.length) return parts.join(', ');
+    throw new Error('sin localidad');
+  }catch(e){
+    // respaldo: OpenStreetMap Nominatim
+    try{
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=es`);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const j = await r.json();
+      const a = j.address || {};
+      const parts = [a.village||a.town||a.city||a.municipality, a.state].filter(Boolean);
+      if(parts.length) return parts.join(', ');
+    }catch(e2){}
+    return null;
+  }
+}
+
+async function init(useFallback){
+  try{
+    let lat, lon, label;
+    const isSecure = window.isSecureContext === true;
+    if(!useFallback && !isSecure){
+      document.getElementById('app').innerHTML = `
+        <div class="err">
+          Este archivo se abrió sin HTTPS, así que el navegador bloquea el GPS por seguridad.<br><br>
+          Sube el archivo a Netlify/GitHub Pages para usar tu ubicación real, o continúa con la ubicación aproximada.<br><br>
+          <button class="btn" onclick="init(true)">Usar ubicación aproximada (Rengo)</button>
+        </div>`;
+      return;
+    }
+    if(!useFallback && navigator.geolocation){
+      const pos = await new Promise((res, rej)=>{
+        navigator.geolocation.getCurrentPosition(res, rej, {
+          timeout: 8000,
+          enableHighAccuracy: false, // ubicación por red: mucho más rápida que esperar señal GPS real
+          maximumAge: 60000 // acepta una ubicación de hasta 1 minuto de antigüedad si ya la tenía
+        });
+      });
+      lat = pos.coords.latitude; lon = pos.coords.longitude;
+      label = `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+    } else {
+      lat = RENGO_FALLBACK.lat; lon = RENGO_FALLBACK.lon; label = RENGO_FALLBACK.name;
+    }
+    document.getElementById('locLabel').textContent = label;
+
+    const msgEl = document.getElementById('loadingMsg');
+    if(msgEl) msgEl.textContent = 'Consultando clima…';
+
+    // pide el nombre del lugar en paralelo; actualiza el texto cuando llegue, sin bloquear el resto
+    reverseGeocode(lat, lon).then(place => {
+      if(place) document.getElementById('locLabel').textContent = `${place} · ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+    });
+
+    // el clima se pide y se muestra de inmediato — el Kp NO debe bloquear esta pantalla
+    const weather = await fetchWeather(lat, lon);
+
+    // auto-detección de modo según amanecer/atardecer reales del día
+    const now = new Date();
+    const sunrise = new Date(weather.daily.sunrise[0]);
+    const sunset = new Date(weather.daily.sunset[0]);
+    isNight = (now < sunrise || now > sunset);
+    document.getElementById('btnDay').classList.toggle('active', !isNight);
+    document.getElementById('btnNight').classList.toggle('active', isNight);
+    applyTheme(); // respeta el tema manual si el piloto ya eligió uno; si es "auto", sigue este modo
+
+    // primer render con Kp aún pendiente — se ve todo excepto el Kp de inmediato
+    render(weather, {value:null, source:null, errors:['cargando…']});
+
+    // el Kp llega después, en segundo plano, y solo entonces se vuelve a pintar esa parte
+    fetchKp().then(kp => render(weather, kp));
+  }catch(e){
+    document.getElementById('app').innerHTML = `
+      <div class="err">
+        No se pudo obtener la ubicación o los datos (${e.message||'error de red'}).<br><br>
+        <button class="btn" onclick="init(true)">Usar ubicación aproximada (Rengo)</button>
+      </div>`;
+  }
+}
+
+try{ init(false); }catch(e){
+  const app = document.getElementById('app');
+  if(app) app.innerHTML = `<div class="err">Error al iniciar: ${e.message}</div>`;
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
